@@ -13,7 +13,7 @@ Static files only. No server code, no build step.
 
 ## Notes
 - Maps: satellite from Esri World Imagery and streets from OpenStreetMap public tile servers. Demo use only. For the live build use a licensed provider or a self-hosted tile server.
+- Forms: Form 1A, the BMU Patrol Report, the Seizure Form (DF/SZ) and the MCS sheet are generated from each patrol. Open a patrol > Forms, then "Print or save as PDF", or export Form 1A as CSV from Reports. Sample names, IDs and phone numbers are invented.
 - GPS needs HTTPS and the phone's permission. The camera uses the phone's own camera app.
 - Zone shapes and the core area are illustrative until Patte confirms the real boundaries. Iweni boundary points come from the supplied coordinate table.
 - `app.js` is the combined source. The readable source files are in the `src` folder of the full project.
-# POps

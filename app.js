@@ -364,15 +364,15 @@ const Inp=({id,value,onChange,type='text',placeholder})=>html`<input id=${id} ty
 
 const Table=({cols,rows,onRow,empty='No records to show.',sel})=>html`<div className="tscroll"><table className="tbl"><thead><tr>${cols.map(c=>html`<th key=${c.k} className=${c.cls||''}>${c.h}</th>`)}</tr></thead><tbody>${rows.length?rows.map((r,i)=>html`<tr key=${r.id||r.no||i} className=${(onRow?'click ':'')+(sel&&sel===r.id?'sel':'')} onClick=${onRow?()=>onRow(r):null} tabIndex=${onRow?0:null} onKeyDown=${onRow?e=>{if(e.key==='Enter')onRow(r);}:null}>${cols.map(c=>html`<td key=${c.k} className=${c.cls||''}>${c.r?c.r(r):r[c.k]}</td>`)}</tr>`):html`<tr><td colSpan=${cols.length} className="empty">${empty}</td></tr>`}</tbody></table></div>`;
 
-const Drawer=({open,onClose,title,sub,children,foot})=>{
+const Drawer=({open,onClose,title,sub,children,foot,wide})=>{
  useEffect(()=>{if(!open)return;const f=e=>{if(e.key==='Escape')onClose();};window.addEventListener('keydown',f);return()=>window.removeEventListener('keydown',f);},[open]);
  if(!open)return null;
- return html`<div className="overlay" onClick=${onClose}><aside className="drawer" role="dialog" aria-modal="true" aria-label=${title} onClick=${e=>e.stopPropagation()}><header><div><h2>${title}</h2>${sub&&html`<p>${sub}</p>`}</div><button className="iconbtn" onClick=${onClose} aria-label="Close"><${Icon} n="x"/></button></header><div className="drawer-b">${children}</div>${foot&&html`<footer>${foot}</footer>`}</aside></div>`;
+ return html`<div className="overlay" onClick=${onClose}><aside className=${'drawer '+(wide?'wide':'')} role="dialog" aria-modal="true" aria-label=${title} onClick=${e=>e.stopPropagation()}><header><div><h2>${title}</h2>${sub&&html`<p>${sub}</p>`}</div><button className="iconbtn" onClick=${onClose} aria-label="Close"><${Icon} n="x"/></button></header><div className="drawer-b">${children}</div>${foot&&html`<footer>${foot}</footer>`}</aside></div>`;
 };
-const Modal=({open,onClose,title,children,foot})=>{
+const Modal=({open,onClose,title,children,foot,wide})=>{
  useEffect(()=>{if(!open)return;const f=e=>{if(e.key==='Escape')onClose();};window.addEventListener('keydown',f);return()=>window.removeEventListener('keydown',f);},[open]);
  if(!open)return null;
- return html`<div className="overlay center" onClick=${onClose}><div className="modal" role="dialog" aria-modal="true" aria-label=${title} onClick=${e=>e.stopPropagation()}><header><h2>${title}</h2><button className="iconbtn" onClick=${onClose} aria-label="Close"><${Icon} n="x"/></button></header><div className="modal-b">${children}</div>${foot&&html`<footer>${foot}</footer>`}</div></div>`;
+ return html`<div className="overlay center" onClick=${onClose}><div className=${'modal '+(wide?'wide':'')} role="dialog" aria-modal="true" aria-label=${title} onClick=${e=>e.stopPropagation()}><header><h2>${title}</h2><button className="iconbtn" onClick=${onClose} aria-label="Close"><${Icon} n="x"/></button></header><div className="modal-b">${children}</div>${foot&&html`<footer>${foot}</footer>`}</div></div>`;
 };
 const KV=({rows})=>html`<dl className="kv">${rows.map(r=>html`<div key=${r[0]}><dt>${r[0]}</dt><dd>${r[1]}</dd></div>`)}</dl>`;
 
@@ -541,6 +541,175 @@ const GeoMap=({layers=['zones','patrols'],items=[],tracks=[],sel,onSel,points=[]
  return html`<div ref=${box} className=${'geomap '+(compact?'compact ':'')+(locked?'locked ':'')+(base==='sat'?'sat':'osm')} style=${height?{height}:null} tabIndex=${locked?-1:0} onPointerDown=${down} onPointerMove=${move} onPointerUp=${up} onPointerCancel=${up} onKeyDown=${key} onDoubleClick=${e=>{if(!locked&&vref.current){const [px,py]=rel(e);zoomAt(vref.current.z+1,px,py);}}}>${body}</div>`;
 };
 const OpsMap=GeoMap;
+/* ============ the real paper forms, generated from one capture ============
+   Annex 1  Form 1A  Patrol data capture form (used during patrol)
+   Annex 2  BMU Patrol Reporting Form (English / Kiswahili)
+   Annex 3  Form DF/SZ  Receipt of notice of seizure of items (Fisheries General Regulations s.18)
+   MCS Outcome Data Compilation Form (GOK 2014 MCS SOP manual)                                  */
+const INFR=[
+ [1,'No fishing licence','No Fishing License'],
+ [2,'Unsustainable gear','Possession/use of unsustainable gears (Beach Seine, Spear Gun, Undersize net and Monofilament)'],
+ [3,'No-take zone or closed season','Fishing within a no-take zone/closed season'],
+ [4,'Restricted gear in exclusion zone','Use of restricted gear within gear exclusion zone'],
+ [5,'Immature or undersize fish','Possession of immature/undersize fish'],
+ [6,'Fish unfit for consumption','Fish unfit for human consumption'],
+ [7,'Unseaworthy craft','Unseaworthy craft'],
+ [8,'Causing pollution','Causing pollution'],
+ [9,'Craft without valid registration','Craft without valid registration/license no.'],
+ [10,'Underage','Underage'],
+ [11,'Poor fishing handling','Poor fishing handling',1],
+ [12,'Fishing method causing pollution','Illegal fishing method causing pollution',1],
+ [13,'Transport of immature fish','Transport of immature fish',1],
+ [14,'Transport of illegal gears','Transport of illegal gears',1]
+];
+const infName=c=>{const x=INFR.find(i=>i[0]===+c);return x?x[1]:'No infringement';};
+const GEARS=['Hand line','Gillnet','Long line hooks','Trap or basket','Spear gun','Beach seine','Monofilament gillnet','Undersize net','Trawl net','Scoop net','Ring net','Trammel net','Trolling net','Harpoon','Hooked stick','Pointed stick','None','Other'];
+const ACTIONS=['Advised or warned','Gear confiscated','Catch released','Referred to Fisheries','Handed to Police or Coast Guard','No action needed'];
+const OBJECTIVES=['Surveillance','Enforcement','Joint patrol','Monitoring and research','Other'];
+const AGENCIES=[['bmu','BMU (including boatmen)'],['cfd','County Fisheries Dept'],['cps','County Police Service'],['kfs','Kenya Fisheries Service'],['kcg','Kenya Coast Guard Service'],['kma','Kenya Maritime Authority'],['other','Other (specify)']];
+const CHAL={fuel:['Fuel shortage','Uhaba wa mafuta'],weather:['Bad weather','Hali mbaya ya anga'],mech:['Mechanical issues','Boti kuharibika'],resist:['Resistance from fishers','Usumbufu wa wavuvi'],other:['Other','Mengine']};
+const ATTACH=[['capture','Patrol data capture form'],['costing','Patrol costing table'],['seizure','Seizure form'],['mcs','MCS outcome data compilation form'],['other','Other']];
+const UNITS=['Piece','Kg','Metre','Set','Litre'];
+
+const pad4=n=>String(n).padStart(4,'0');
+const ampm=t=>{if(!t||!/^\d+:\d+/.test(t))return '';const a=t.split(':').map(Number);return ((a[0]%12)||12)+':'+pad(a[1])+(a[0]<12?' am':' pm');};
+const mask=v=>v?'•••• '+String(v).replace(/\s/g,'').slice(-3):'';
+const piiOk=(role,settings)=>['admin','ranger','fisheries'].includes(role)||(role==='bmu'&&!!(settings&&settings.piiBmu));
+const sumParts=p=>Object.values(p.parts||{}).reduce((a,b)=>a+(+b||0),0);
+const hpOf=b=>{const x=BOATS.find(k=>k.name===b);const m=x&&x.engine.match(/(\d+)\s*HP/);return m?m[1]+' HP':'';};
+const BOAT_TYPE={'MV Mlinzi':'Fibreglass boat, 7 m','Jahazi Bahari':'Wooden dhow, 9 m','Kipepeo':'Fibreglass boat, 5 m'};
+const staffOf=n=>STAFF.find(s=>s.name===n)||{};
+
+/* every patrol record carries the form fields, so every screen can render the forms */
+const formDefaults=p=>({objective:'Surveillance',county:'Lamu',jcma:'Pate-Shanga',leaderPos:'Patrol leader',leaderPhone:'0700 000 '+(staffOf(p.leader).no||'PCC-000').slice(-3),enc:[],seiz:[],parts:{bmu:(p.rangers||[]).length+1},vessel:{name:p.boat,type:BOAT_TYPE[p.boat]||'',hp:hpOf(p.boat)},areas:[p.area],chal:{},attach:{},prep:null,mcsx:{},fuel:''});
+const withForm=p=>{const d=formDefaults(p);for(const k in d)if(!(k in p))p[k]=d[k];return p;};
+const mkSeizure=(e,items,p,n)=>{const st=staffOf(p.leader);return {no:'SZ-'+p.id.slice(-4)+'-'+n,encNo:e.n,items,person:{name:e.name,nat:'Kenyan',id:e.id,date:p.date,sign:null},officer:{name:p.leader,desig:st.title||'Marine Ranger',pno:st.no||'',station:bmuName(p.bmu),date:p.date,sign:null},loc:{district:p.county,town:e.ground,road:'At sea'},time:e.time};};
+const mcsRows=p=>{const g={};(p.enc||[]).filter(e=>e.code).forEach(e=>{(g[e.code]=g[e.code]||[]).push(e);});const ops=sumParts(p);
+ return Object.keys(g).map(c=>{const es=g[c],x=(p.mcsx&&p.mcsx[c])||{},conf=es.filter(e=>e.seized||/confiscat/i.test(e.action||''));
+  return {code:c,suspects:new Set(es.map(e=>e.name)).size,convicts:x.convicts||0,fines:x.fines||0,items:conf.map(e=>e.gear).join(', '),qty:conf.reduce((a,e)=>a+(+e.qty||0),0)||'',type:infName(c),times:x.times||1,pros:x.pros||'No',fuel:p.fuel||'',ops,remarks:Object.keys(p.chal||{}).filter(k=>p.chal[k]).map(k=>k==='other'&&p.chal.otherText?p.chal.otherText:CHAL[k][0]).join(', ')};});};
+
+/* ---- sample records in the real form layout (invented people, for the demo only) ---- */
+(()=>{
+ const E=(n,time,name,id,phone,gear,gearId,qty,ground,origin,code,details,action,seized)=>({n,time,name,id,phone,gear,gearId,qty,ground,origin,code,details,action,seized:!!seized});
+ const P=id=>PATROLS0.find(p=>p.id===id);
+ PATROLS0.forEach(withForm);
+ let p=P('PT-2026-0416');
+ if(p){p.leaderPhone='0700 000 004';p.leaderPos='Patrol leader';p.parts={bmu:3,cfd:1,cps:0,kfs:0,kcg:0,kma:0,other:0};p.areas=['Iweni south reef edge','Pate landing site'];p.chal={weather:true};p.attach={capture:true,seizure:true,mcs:true};p.fuel=38;p.prep={name:'Hamisi Mwinyi',desig:'Marine Ranger (Patrol leader)',date:'10 Nov 2026'};
+  p.enc=[E(1,'06:48','Rashid Omari Baya','30000101','0700 000 101','Gillnet','GN-14',1,'Iweni south','Pate',1,'No licence produced. Recorded and advised.','Advised or warned'),
+         E(2,'07:40','Ali Kheri Mwalimu','30000102','0700 000 102','Spear gun','SG-2',2,'Iweni south reef edge','Shanga Rubu',3,'Fishing inside the No Take Zone. Two spear guns confiscated.','Gear confiscated',1),
+         E(3,'08:25','Mohamed Salim Juma','30000103','0700 000 103','Hand line','',3,'Iweni south','Pate','','Licence checked. Catch within size limit.','No action needed')];
+  p.seiz=[{no:'SZ-0416-1',encNo:2,items:[{name:'Spear gun',unit:'Piece',qty:2,value:6000}],person:{name:'Ali Kheri Mwalimu',nat:'Kenyan',id:'30000102',date:'10 Nov 2026',sign:null},officer:{name:'Hamisi Mwinyi',desig:'Marine Ranger (Patrol leader)',pno:'PCC-004',station:'Pate BMU',date:'10 Nov 2026',sign:null},loc:{district:'Lamu',town:'Iweni south reef edge',road:'At sea'},time:'07:40'}];
+  p.mcsx={3:{convicts:0,fines:0,pros:'No',times:1}};}
+ p=P('PT-2026-0412');
+ if(p){p.parts={bmu:3,cfd:0,cps:0,kfs:0,kcg:0,kma:0,other:0};p.areas=['Iweni central zone'];p.attach={capture:true,mcs:true};p.fuel=44;p.prep={name:'Hamisi Mwinyi',desig:'Marine Ranger (Patrol leader)',date:'07 Nov 2026'};
+  p.enc=[E(1,'07:55','Said Mwinyi Hamad','30000104','0700 000 104','Trap or basket','TR-6',6,'Iweni central','Pate',5,'Undersize fish found in catch. Released alive.','Catch released')];p.mcsx={5:{convicts:0,fines:0,pros:'No',times:1}};}
+ p=P('PT-2026-0415');
+ if(p){p.leaderPhone='0700 000 007';p.parts={bmu:3,cfd:1,cps:0,kfs:0,kcg:0,kma:0,other:0};p.areas=['Shanga Ishakani coast','Ishakani landing site'];p.chal={fuel:true};p.attach={capture:true,seizure:true,mcs:true};p.fuel=36;p.prep={name:'Mwanahawa Ali',desig:'Marine Ranger (Patrol leader)',date:'09 Nov 2026'};
+  p.enc=[E(1,'07:12','Omar Athman Famau','30000105','0700 000 105','Monofilament gillnet','MN-3',1,'Ishakani reef','Shanga Ishakani',2,'24 m monofilament net found in use. Net confiscated.','Gear confiscated',1),
+         E(2,'08:02','Zuhura Bakari Ali','30000106','0700 000 106','Hand line','',2,'Ishakani coast','Shanga Ishakani','','Licence and catch checked.','No action needed')];
+  p.seiz=[{no:'SZ-0415-1',encNo:1,items:[{name:'Monofilament gillnet (24 m)',unit:'Piece',qty:1,value:4500}],person:{name:'Omar Athman Famau',nat:'Kenyan',id:'30000105',date:'09 Nov 2026',sign:null},officer:{name:'Mwanahawa Ali',desig:'Marine Ranger (Patrol leader)',pno:'PCC-007',station:'Shanga Ishakani BMU',date:'09 Nov 2026',sign:null},loc:{district:'Lamu',town:'Ishakani reef',road:'At sea'},time:'07:12'}];
+  p.mcsx={2:{convicts:0,fines:0,pros:'No',times:1}};}
+})();
+
+/* ---- helpers: print and export (work in the hosted app, not in the preview page) ---- */
+const printNode=el=>{if(!el)return;let h=document.getElementById('printroot');if(!h){h=document.createElement('div');h.id='printroot';document.body.appendChild(h);}h.innerHTML=el.outerHTML;document.body.classList.add('printing');const done=()=>{document.body.classList.remove('printing');h.innerHTML='';window.removeEventListener('afterprint',done);};window.addEventListener('afterprint',done);setTimeout(()=>{try{window.print();}catch(e){done();}},60);};
+const csvCell=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+const saveCSV=(name,rows)=>{try{const b=new Blob(['﻿'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove();},500);}catch(e){}};
+const encRows=(ps,pii)=>[['Patrol ref','Date','BMU','S/No','Time','Fisher name','ID','Phone','Gear type','Gear ID','Gear qty','Fishing ground','BMU origin','Infringement code','Infringement','Details','Action taken','Seized']].concat(ps.flatMap(p=>(p.enc||[]).map(e=>[p.id,p.date,bmuName(p.bmu),e.n,e.time,e.name,pii?e.id:mask(e.id),pii?e.phone:mask(e.phone),e.gear,e.gearId,e.qty,e.ground,e.origin,e.code,e.code?infName(e.code):'',e.details,e.action,e.seized?'Yes':'No'])));
+
+/* ---- the paper ---- */
+const Cb=({on,children})=>html`<span className="cb"><b>${on?'☑':'☐'}</b> ${children}</span>`;
+const PapHead=({form,title,sub})=>html`<div className="pp-head"><small>${form}</small><h3>${title}</h3>${sub&&html`<p>${sub}</p>`}</div>`;
+const PapFoot=({p})=>html`<div className="pp-foot">Generated by POps from the patrol record ${p.id}. Source: GOK, 2014 MCS Standard Operating Procedure Manual.</div>`;
+const Sig=({src})=>src?html`<img className="pp-sig" src=${src} alt="Signature"/>`:html`<i className="pp-nosig">Not captured</i>`;
+
+const FormCapture=({p,pii})=>{
+ const rows=[...(p.enc||[])];while(rows.length<8)rows.push(null);
+ return html`<div className="paper land" data-doc="capture"><${PapHead} form="Annex 1 · Form 1A" title="Patrol data capture form" sub="For use during patrol"/>
+ <div className="pp-grid"><div><label>Patrol reference no.</label><b>${p.id}</b></div><div><label>Patrol objective</label><b>${p.objective}</b></div><div><label>Patrol date</label><b>${p.date}</b></div><div><label>Patrol boat name</label><b>${p.boat}</b></div><div><label>Patrol leader name</label><b>${p.leader}</b></div><div><label>Position</label><b>${p.leaderPos}</b></div><div><label>Phone no.</label><b>${p.leaderPhone}</b></div><div><label>County name</label><b>${p.county}</b></div><div><label>JCMA name</label><b>${p.jcma}</b></div><div><label>BMU name</label><b>${bmuName(p.bmu)}</b></div><div><label>Start time (12 hrs)</label><b>${ampm(p.start)}</b></div><div><label>End time (12 hrs)</label><b>${ampm(p.end)}</b></div></div>
+ <div className="pp-scroll"><table className="pp-t"><thead><tr><th>S/No</th><th>Time</th><th>Fisher's name</th><th>ID</th><th>Phone no.</th><th>Gear type and ID</th><th>Gear quantity</th><th>Fishing location / ground</th><th>BMU origin</th><th>Infringement code</th><th>Items confiscated / encountered, details and action taken</th></tr></thead>
+ <tbody>${rows.map((e,i)=>html`<tr key=${i}><td>${i+1}</td>${e?[html`<td key="a">${e.time}</td>`,html`<td key="b">${e.name}</td>`,html`<td key="c">${pii?e.id:mask(e.id)}</td>`,html`<td key="d">${pii?e.phone:mask(e.phone)}</td>`,html`<td key="e">${e.gear==='None'?'—':e.gear+(e.gearId?' '+e.gearId:'')}</td>`,html`<td key="f">${e.qty||'—'}</td>`,html`<td key="g">${e.ground}</td>`,html`<td key="h">${e.origin}</td>`,html`<td key="i">${e.code||'—'}</td>`,html`<td key="j">${e.details}${e.action?' ['+e.action+']':''}</td>`]:Array.from({length:10}).map((_,k)=>html`<td key=${k}/>`)}</tr>`)}</tbody></table></div>
+ <div className="pp-legend"><b>Infringement code:</b> ${INFR.filter(i=>!i[3]).map(i=>html`<span key=${i[0]}>${i[0]}. ${i[2]}</span>`)}<span className="x"><b>Added from the current template (confirm with Fisheries):</b> ${INFR.filter(i=>i[3]).map(i=>i[0]+'. '+i[2]).join('; ')}</span></div><${PapFoot} p=${p}/></div>`;
+};
+
+const FormReport=({p})=>{
+ const out=(p.enc||[]).filter(e=>e.code);const rows=[...out];while(rows.length<5)rows.push(null);
+ const ch=p.chal||{};const at=p.attach||{};const pr=p.prep||{};
+ return html`<div className="paper" data-doc="report"><${PapHead} form="Annex 2" title="BMU Patrol Reporting Form"/>
+ <h4>1. Patrol information / Tarifa ya Patrol</h4>
+ <dl className="pp-dl"><div><dt>a) BMU name / Jina la BMU</dt><dd>${bmuName(p.bmu)}</dd></div><div><dt>b) Patrol leader, name</dt><dd>${p.leader}</dd></div><div><dt>c) Patrol leader, position</dt><dd>${p.leaderPos}</dd></div><div><dt>d) Patrol leader, mobile phone number</dt><dd>${p.leaderPhone}</dd></div><div><dt>e) Date of patrol / Tarehe ya Patrol</dt><dd>${p.date}</dd></div><div><dt>f) Time patrol commenced / Saa ya kuanza</dt><dd>${ampm(p.start)}</dd></div><div><dt>g) Time patrol ended / Saa ya kutamatisha</dt><dd>${ampm(p.end)||'—'}</dd></div></dl>
+ <h4>2. Patrol objective(s) / Lengo la Patrol</h4><ol className="pp-ol"><li>${p.objective}</li></ol>
+ <h4>3. Patrol participants / Washikadau walioshiriki katika patrol</h4>
+ <table className="pp-t narrow"><thead><tr><th>Taasisi / No</th><th>Idadi ya watu</th></tr></thead><tbody>${AGENCIES.map((a,i)=>html`<tr key=${a[0]}><td>${i+1}. ${a[1]}</td><td>${(p.parts&&p.parts[a[0]])||0}</td></tr>`)}</tbody></table>
+ <h4>4. Vessel information / Tarifa kuhusu Chombo la Patrol iliyotumika</h4>
+ <dl className="pp-dl"><div><dt>Name of patrol vessel / Jina la Chombo</dt><dd>${(p.vessel||{}).name}</dd></div><div><dt>Vessel type / Aina ya Chombo (material and length)</dt><dd>${(p.vessel||{}).type}</dd></div><div><dt>Horsepower (HP) of vessel engine / Nguvu ya Engine</dt><dd>${(p.vessel||{}).hp}</dd></div></dl>
+ <h4>5. Patrol area / Eneo la Patrol <small>(names of fishing ground, names of landing sites)</small></h4><ol className="pp-ol">${(p.areas||[]).filter(Boolean).map((a,i)=>html`<li key=${i}>${a}</li>`)}</ol>
+ <h4>6. Outcomes / Matokeo ya patrol na hatua iliyochukuliwa <small>(summarised from Annex 1, Patrol data capture form)</small></h4>
+ <table className="pp-t"><thead><tr><th>Infringement no.</th><th>Infringement type</th><th>Action taken / Hatua iliyochukuliwa</th></tr></thead><tbody>${rows.map((e,i)=>html`<tr key=${i}>${e?[html`<td key="a">${e.code}</td>`,html`<td key="b">${infName(e.code)}</td>`,html`<td key="c">${e.action}</td>`]:[html`<td key="a"/>`,html`<td key="b"/>`,html`<td key="c"/>`]}</tr>`)}</tbody></table>
+ <h4>7. Challenges encountered / Changamoto</h4>
+ <div className="pp-cbs">${Object.keys(CHAL).map((k,i)=>html`<${Cb} key=${k} on=${!!ch[k]}>${'abcde'[i]}) ${CHAL[k][0]} / ${CHAL[k][1]}${k==='other'&&ch.otherText?': '+ch.otherText:''}</${Cb}>`)}</div>
+ <h4>8. List of attached documents</h4>
+ <div className="pp-cbs">${ATTACH.map((a,i)=>html`<${Cb} key=${a[0]} on=${!!at[a[0]]}>${'abcde'[i]}) ${a[1]}</${Cb}>`)}</div>
+ <h4>9. Prepared by / Mwandishi wa Repoti</h4>
+ <dl className="pp-dl"><div><dt>Name / Jina</dt><dd>${pr.name||'—'}</dd></div><div><dt>Designation / Cheo</dt><dd>${pr.desig||'—'}</dd></div><div><dt>Signature / Sahihi</dt><dd><${Sig} src=${pr.sign}/></dd></div><div><dt>Date / Tarehe ya Kuandika Repoti</dt><dd>${pr.date||'—'}</dd></div></dl><${PapFoot} p=${p}/></div>`;
+};
+
+const FormSeizure=({s,p,pii})=>{
+ const rows=[...s.items];while(rows.length<7)rows.push(null);
+ const tot=s.items.reduce((a,i)=>a+(+i.value||0),0);
+ return html`<div className="paper" data-doc="seizure"><${PapHead} form="Annex 3 · CAP. 378 · Form DF/SZ" title="The Fisheries (General) Regulations" sub="Receipt of notice of seizure of items · s. 18"/>
+ <p className="pp-ref">Seizure no. <b>${s.no}</b> · Patrol <b>${p.id}</b> · Form 1A row <b>${s.encNo}</b></p>
+ <h4>1. Particulars of items seized</h4>
+ <table className="pp-t"><thead><tr><th>No</th><th>Name of items seized</th><th>Unit of quantity</th><th>Quantity</th><th>Estimated value (KES)</th></tr></thead><tbody>${rows.map((it,i)=>html`<tr key=${i}><td>${i+1}</td>${it?[html`<td key="a">${it.name}</td>`,html`<td key="b">${it.unit}</td>`,html`<td key="c">${it.qty}</td>`,html`<td key="d">${it.value?KES(+it.value):''}</td>`]:[html`<td key="a"/>`,html`<td key="b"/>`,html`<td key="c"/>`,html`<td key="d"/>`]}</tr>`)}</tbody><tfoot><tr><td colSpan="4">Total estimated value</td><td>${tot?KES(tot):''}</td></tr></tfoot></table>
+ <h4>2. Particulars of the person from whom the above items have been seized</h4>
+ <dl className="pp-dl"><div><dt>Name</dt><dd>${s.person.name}</dd></div><div><dt>Nationality</dt><dd>${s.person.nat}</dd></div><div><dt>ID / Passport no.</dt><dd>${pii?s.person.id:mask(s.person.id)}</dd></div><div><dt>Date</dt><dd>${s.person.date}</dd></div><div><dt>Signature</dt><dd><${Sig} src=${s.person.sign}/></dd></div></dl>
+ <h4>3. Name of officer impounding items</h4>
+ <dl className="pp-dl"><div><dt>Name</dt><dd>${s.officer.name}</dd></div><div><dt>Designation</dt><dd>${s.officer.desig}</dd></div><div><dt>P/No.</dt><dd>${s.officer.pno}</dd></div><div><dt>Station</dt><dd>${s.officer.station}</dd></div><div><dt>Signature</dt><dd><${Sig} src=${s.officer.sign}/></dd></div><div><dt>Date</dt><dd>${s.officer.date}</dd></div></dl>
+ <h4>4. Location where the seizure occurred</h4>
+ <dl className="pp-dl"><div><dt>(i) District</dt><dd>${s.loc.district}</dd></div><div><dt>Town / location / sub-location</dt><dd>${s.loc.town}</dd></div><div><dt>Road / street</dt><dd>${s.loc.road}</dd></div><div><dt>(ii) Time of seizure</dt><dd>${ampm(s.time)}</dd></div></dl><${PapFoot} p=${p}/></div>`;
+};
+
+const FormMCS=({p})=>{
+ const rows=mcsRows(p);const pad8=[...rows];while(pad8.length<6)pad8.push(null);
+ return html`<div className="paper land" data-doc="mcs"><${PapHead} form="Form 1A · MCS" title="MCS outcome data compilation form"/>
+ <div className="pp-grid"><div><label>Patrol reference no.</label><b>${p.id}</b></div><div><label>Name of BMU</label><b>${bmuName(p.bmu)}</b></div><div><label>Sub-county</label><b>Lamu West</b></div><div><label>County</label><b>${p.county}</b></div><div><label>Date</label><b>${p.date}</b></div></div>
+ <div className="pp-scroll"><table className="pp-t"><thead><tr><th>No. of suspects</th><th>No. of convicts</th><th>Total fines in KES</th><th>Gears / items type confiscated</th><th>Quantity</th><th>Type of infringement</th><th>No. of times appearing</th><th>Prosecution YES or NO</th><th>Amount of fuel (L)</th><th>No. of operatives</th><th>Challenges / remarks</th></tr></thead>
+ <tbody>${pad8.map((r,i)=>html`<tr key=${i}>${r?[r.suspects,r.convicts,r.fines?KES(+r.fines):0,r.items||'—',r.qty,r.code+'. '+r.type,r.times,r.pros,r.fuel,r.ops,r.remarks].map((v,k)=>html`<td key=${k}>${v}</td>`):Array.from({length:11}).map((_,k)=>html`<td key=${k}/>`)}</tr>`)}</tbody></table></div><${PapFoot} p=${p}/></div>`;
+};
+
+/* ---- the forms of one patrol: tabs, print, export, follow-up fields ---- */
+const PatrolForms=({p,start='capture'})=>{
+ const {role,settings,setPatrols,log,toast,can}=useApp();
+ const pii=piiOk(role,settings);const write=can('patrols')==='w';
+ const [tab,setTab]=useState(start);const [si,setSi]=useState(0);
+ const host=useRef(null);const pwa=!!window.POPS_PWA;
+ const seiz=p.seiz||[];const s=seiz[Math.min(si,Math.max(0,seiz.length-1))];
+ const rows=mcsRows(p);
+ const setX=(c,k,v)=>setPatrols(x=>x.map(q=>q.id===p.id?{...q,mcsx:{...q.mcsx,[c]:{...((q.mcsx||{})[c]||{}),[k]:v}}}:q));
+ const tabs=[['capture','Form 1A'],['report','Patrol report'],['seizure','Seizure ('+seiz.length+')'],['mcs','MCS outcome']];
+ const doc=tab==='capture'?html`<${FormCapture} p=${p} pii=${pii}/>`:tab==='report'?html`<${FormReport} p=${p}/>`:tab==='mcs'?html`<${FormMCS} p=${p}/>`:s?html`<${FormSeizure} s=${s} p=${p} pii=${pii}/>`:html`<${Notice} tone="info" title="No seizure form needed">No items were seized on this patrol, so no Form DF/SZ was generated. POps creates one only when an item is seized.</${Notice}>`;
+ const prt=()=>{printNode(host.current&&host.current.querySelector('.paper'));log('Printed form: '+tab,'Patrols',p.id);};
+ return html`<div className="pforms">
+  <${Notice} tone="info" title="Written once, generated four times">The ranger records the patrol once. POps fills in Form 1A, the BMU Patrol Reporting Form, the Seizure Form and the MCS Outcome sheet in the same layout as the paper forms.</${Notice}>
+  <div className="pf-bar"><${Tabs} tabs=${tabs} value=${tab} onChange=${setTab}/>
+   <span className="btnrow">${pwa?html`<${Btn} kind="small" icon="download" onClick=${prt}>Print or save as PDF</${Btn}>${tab==='capture'&&html`<${Btn} kind="small" icon="download" onClick=${()=>{saveCSV(p.id+'-form-1A.csv',encRows([p],pii));log('Exported Form 1A CSV','Patrols',p.id);toast('Form 1A exported');}}>CSV</${Btn}>`}`:html`<span className="muted small">Print, PDF and CSV work in the installed app link.</span>`}</span></div>
+  ${tab==='seizure'&&seiz.length>1&&html`<div className="chips">${seiz.map((z,i)=>html`<button key=${z.no} className=${'fchip '+(si===i?'on':'')} onClick=${()=>setSi(i)}>${z.no}</button>`)}</div>`}
+  ${!pii&&html`<p className="muted small"><${Icon} n="lock" s=${12}/> Fisher ID and phone numbers are masked for your role.</p>`}
+  ${tab==='mcs'&&write&&rows.length>0&&html`<div className="follow"><h4>Follow-up outcomes</h4><p className="muted small">Filled in later by the Super Admin or the agency. These columns are not known on the day of the patrol.</p>${rows.map(r=>html`<div key=${r.code} className="follow-r"><b>${r.code}. ${r.type}</b>
+    <label>Convicts<input type="number" min="0" value=${r.convicts} onChange=${e=>setX(r.code,'convicts',+e.target.value)}/></label><label>Fines (KES)<input type="number" min="0" value=${r.fines} onChange=${e=>setX(r.code,'fines',+e.target.value)}/></label><label>Times appearing<input type="number" min="1" value=${r.times} onChange=${e=>setX(r.code,'times',+e.target.value)}/></label><label>Prosecution<select value=${r.pros} onChange=${e=>setX(r.code,'pros',e.target.value)}><option>No</option><option>Yes</option></select></label></div>`)}</div>`}
+  <div className="pp-wrap" ref=${host}>${doc}</div></div>`;
+};
+
+/* ---- signature pad (finger or pen) ---- */
+const SigPad=({value,onChange,label})=>{
+ const cv=useRef(null);const dn=useRef(false);
+ const pt=e=>{const r=cv.current.getBoundingClientRect();return [(e.clientX-r.left)*(cv.current.width/r.width),(e.clientY-r.top)*(cv.current.height/r.height)];};
+ const down=e=>{e.preventDefault();dn.current=true;const c=cv.current.getContext('2d');const p=pt(e);c.lineWidth=3;c.lineCap='round';c.strokeStyle='#111';c.beginPath();c.moveTo(p[0],p[1]);try{cv.current.setPointerCapture(e.pointerId);}catch(x){}};
+ const move=e=>{if(!dn.current)return;const c=cv.current.getContext('2d');const p=pt(e);c.lineTo(p[0],p[1]);c.stroke();};
+ const up=()=>{if(!dn.current)return;dn.current=false;try{onChange(cv.current.toDataURL('image/png'));}catch(x){}};
+ const clear=()=>{const c=cv.current.getContext('2d');c.clearRect(0,0,cv.current.width,cv.current.height);onChange(null);};
+ return html`<div className="sigpad"><canvas ref=${cv} width="600" height="220" aria-label=${label} onPointerDown=${down} onPointerMove=${move} onPointerUp=${up} onPointerCancel=${up}/><div className="sig-row"><span>${value?'Signature captured':label}</span><button type="button" className="btn small" onClick=${clear}>Clear</button></div></div>`;
+};
 /* ============ views part 1: dashboards, map, patrols, incidents, ranger app ============ */
 const incItem=i=>({id:i.id,layer:'incidents',x:i.x,y:i.y,title:i.cat,when:i.date,team:i.ranger+' ('+i.patrol+')',desc:i.desc,status:STAGES[i.stage],follow:i.action+(i.ref!=='None'?'. Referral: '+i.ref:''),loc:i.loc,ref:i.id});
 const Photos=({n=3})=>html`<div className="photos">${Array.from({length:n}).map((_,i)=>html`<div key=${i} className="ph"><${Icon} n="camera" s=${18}/><span>Photo ${i+1}</span></div>`)}</div>`;
@@ -701,10 +870,10 @@ const Dashboard=()=>{const {role}=useApp();
 /* ---------- Patrols ---------- */
 const PatrolForm=({onClose})=>{
  const {patrols,setPatrols,log,toast}=useApp();
- const [f,setF]=useState({area:'Iweni LMMA, northern zone',date:'2026-11-13',start:'06:00',leader:'Hamisi Mwinyi',boat:'MV Mlinzi',cox:'Said Famau',bmu:'pate'});
+ const [f,setF]=useState({objective:'Surveillance',area:'Iweni LMMA, northern zone',date:'2026-11-13',start:'06:00',leader:'Hamisi Mwinyi',boat:'MV Mlinzi',cox:'Said Famau',bmu:'pate'});
  const s=k=>v=>setF(o=>({...o,[k]:v}));
- const save=()=>{const id='PT-2026-'+String(422+patrols.length-9).padStart(4,'0');const d=new Date(f.date+'T12:00:00');const p={id,date:`${pad(d.getDate())} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]} ${d.getFullYear()}`,start:f.start,end:'—',leader:f.leader,rangers:[f.leader],boat:f.boat,cox:f.cox,area:f.area,bmu:f.bmu,status:'Planned',review:'—',obs:0,inc:0,km:0,equip:[],action:'—'};setPatrols(x=>[p,...x]);log('Created patrol','Patrols',id);toast(`Patrol ${id} created. ${f.leader} has been notified.`);onClose();};
- return html`<div className="form"><${Field} label="Patrol area" id="pa"><${Sel} id="pa" value=${f.area} onChange=${s('area')} opts=${['Iweni LMMA, northern zone','Iweni LMMA, central zone','Iweni LMMA, southern zone','Shanga Ishakani coast','Shanga Rubu reef edge','Pate south shore']}/></${Field}>
+ const save=()=>{const id='PT-2026-'+String(422+patrols.length-9).padStart(4,'0');const d=new Date(f.date+'T12:00:00');const p=withForm({id,objective:f.objective,date:`${pad(d.getDate())} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]} ${d.getFullYear()}`,start:f.start,end:'—',leader:f.leader,rangers:[f.leader],boat:f.boat,cox:f.cox,area:f.area,bmu:f.bmu,status:'Planned',review:'—',obs:0,inc:0,km:0,equip:[],action:'—'});setPatrols(x=>[p,...x]);log('Created patrol','Patrols',id);toast(`Patrol ${id} created. ${f.leader} has been notified.`);onClose();};
+ return html`<div className="form"><${Field} label="Patrol objective" id="po"><${Sel} id="po" value=${f.objective} onChange=${s('objective')} opts=${OBJECTIVES}/></${Field}><${Field} label="Patrol area" id="pa"><${Sel} id="pa" value=${f.area} onChange=${s('area')} opts=${['Iweni LMMA, northern zone','Iweni LMMA, central zone','Iweni LMMA, southern zone','Shanga Ishakani coast','Shanga Rubu reef edge','Pate south shore']}/></${Field}>
  <${Field} label="BMU area" id="pb"><${Sel} id="pb" value=${f.bmu} onChange=${s('bmu')} opts=${BMUS.map(b=>[b.id,b.name])}/></${Field}>
  <${Field} label="Date" id="pd"><${Inp} id="pd" type="date" value=${f.date} onChange=${s('date')}/></${Field}>
  <${Field} label="Start time" id="pt"><${Inp} id="pt" type="time" value=${f.start} onChange=${s('start')}/></${Field}>
@@ -716,7 +885,7 @@ const PatrolForm=({onClose})=>{
 const Patrols=()=>{
  const {role,patrols,setPatrols,bmuId,log,toast,can}=useApp();
  const me=ROLES[role].user;
- const [q,setQ]=useState('');const [st,setSt]=useState('All');const [open,setOpen]=useState(null);const [mk,setMk]=useState(false);
+ const [q,setQ]=useState('');const [st,setSt]=useState('All');const [open,setOpen]=useState(null);const [mk,setMk]=useState(false);const [dt,setDt]=useState('info');
  let list=patrols;
  if(role==='bmu')list=list.filter(p=>p.bmu===bmuId);
  if(role==='ranger')list=list.filter(p=>p.rangers.includes(me));
@@ -729,9 +898,11 @@ const Patrols=()=>{
  ${!write&&html`<${Notice} tone="info" title="Read-only">${role==='ranger'?'Patrol records are created from the field app.':'You can view these records but not change them.'}</${Notice}>`}
  <${Card}><div className="toolbar"><div className="search"><${Icon} n="search" s=${16}/><input aria-label="Search patrols" placeholder="Search reference, leader or area" value=${q} onChange=${e=>setQ(e.target.value)}/></div>
  <div className="chips">${['All','Planned','Active','Paused','Completed','Overdue','Pending Sync'].map(s=>html`<button key=${s} className=${'fchip '+(st===s?'on':'')} onClick=${()=>setSt(s)}>${s}</button>`)}</div></div>
- <${Table} sel=${open} onRow=${r=>setOpen(r.id)} cols=${[{h:'Reference',k:'id',cls:'mono'},{h:'Date',k:'date'},{h:'Patrol leader',k:'leader'},{h:'Area',k:'area'},{h:'Boat',k:'boat'},{h:'Km',k:'km',cls:'num',r:r=>r.km?r.km.toFixed(1):'—'},{h:'Status',k:'status',r:r=>html`<${Chip} t=${r.status}/>`},{h:'Review',k:'review',r:r=>r.review==='—'?'—':html`<${Chip} t=${r.review}/>`}]} rows=${list}/></${Card}>
- <${Drawer} open=${!!cur} onClose=${()=>setOpen(null)} title=${cur?cur.id:''} sub=${cur?cur.area:''} foot=${cur&&write&&cur.review==='Pending review'?html`<${Btn} kind="primary" icon="check" onClick=${review}>Mark as reviewed</${Btn}>`:null}>
- ${cur&&html`<${KV} rows=${[['Status',html`<${Chip} t=${cur.status}/>`],['Patrol date',cur.date],['Start / end time',cur.start+' / '+cur.end],['Patrol leader',cur.leader],['Participating rangers',cur.rangers.join(', ')],['Boat',cur.boat],['Coxswain',cur.cox],['BMU area',bmuName(cur.bmu)],['Observations recorded',cur.obs],['Incidents reported',cur.inc],['Distance',cur.km?cur.km.toFixed(1)+' km':'—'],['Equipment used',cur.equip.length?cur.equip.join(', '):'—'],['Action taken',cur.action],['Review status',cur.review]]}/>
+ <${Table} sel=${open} onRow=${r=>{setOpen(r.id);setDt('info');}} cols=${[{h:'Reference',k:'id',cls:'mono'},{h:'Date',k:'date'},{h:'Patrol leader',k:'leader'},{h:'Area',k:'area'},{h:'Boat',k:'boat'},{h:'Km',k:'km',cls:'num',r:r=>r.km?r.km.toFixed(1):'—'},{h:'Checks',k:'enc',cls:'num',r:r=>(r.enc||[]).length||'—'},{h:'Infringements',k:'inf',cls:'num',r:r=>(r.enc||[]).filter(e=>e.code).length||'—'},{h:'Status',k:'status',r:r=>html`<${Chip} t=${r.status}/>`},{h:'Review',k:'review',r:r=>r.review==='—'?'—':html`<${Chip} t=${r.review}/>`}]} rows=${list}/></${Card}>
+ <${Drawer} wide=${true} open=${!!cur} onClose=${()=>setOpen(null)} title=${cur?cur.id:''} sub=${cur?cur.area:''} foot=${cur&&write&&cur.review==='Pending review'?html`<${Btn} kind="primary" icon="check" onClick=${review}>Mark as reviewed</${Btn}>`:null}>
+ ${cur&&html`<${Tabs} tabs=${[['info','Summary and map'],['forms','Forms ('+((cur.enc||[]).length)+' checks)']]} value=${dt} onChange=${setDt}/>`}
+ ${cur&&dt==='forms'&&html`<${PatrolForms} key=${cur.id} p=${cur}/>`}
+ ${cur&&dt==='info'&&html`<${KV} rows=${[['Status',html`<${Chip} t=${cur.status}/>`],['Patrol date',cur.date],['Start / end time',cur.start+' / '+cur.end],['Patrol leader',cur.leader],['Participating rangers',cur.rangers.join(', ')],['Boat',cur.boat],['Coxswain',cur.cox],['BMU area',bmuName(cur.bmu)],['Objective',cur.objective],['Fisher checks / infringements',(cur.enc||[]).length+' / '+(cur.enc||[]).filter(e=>e.code).length],['Items seized (Form DF/SZ)',(cur.seiz||[]).length],['Observations recorded',cur.obs],['Incidents reported',cur.inc],['Distance',cur.km?cur.km.toFixed(1)+' km':'—'],['Equipment used',cur.equip.length?cur.equip.join(', '):'—'],['Action taken',cur.action],['Review status',cur.review]]}/>
  <h3 className="mini-h">GPS track</h3>${(()=>{const t=cur.track&&cur.track.length>1?[{id:cur.id,status:cur.status,ll:cur.track}]:TRACKS.filter(t=>t.id===cur.id);return t.length?html`<div className="mapbox"><${OpsMap} key=${cur.id} layers=${['zones','patrols']} items=${[]} tracks=${t} sel=${null} fit="tracks" compact=${true} height=${260}/></div>`:html`<p className="muted small">${cur.status==='Planned'||cur.status==='Overdue'?'No track yet. GPS tracking only runs during an assigned and started patrol.':'No track stored for this demo patrol.'}</p>`;})()}
  <h3 className="mini-h">Photographs</h3>${cur.obs?html`<${Photos}/>`:html`<p className="muted small">None yet.</p>`}`}
  </${Drawer}>
@@ -938,8 +1109,12 @@ const Finance=()=>{
 /* ---------- Reports & Documents ---------- */
 const REP_SUM={Patrol:[['Patrols completed','17'],['Distance covered','142 km'],['Incidents reported','6']],Incident:[['Incidents','6'],['Referred','3'],['Closed','1']],LMMA:[['Patrols inside LMMA','11'],['Violations recorded','3'],['Boundary status','Draft, 3 of 12 points verified']],'Coral restoration':[['Fragments placed','2,530'],['Average survival','92%'],['Bleaching','3%']],Project:[['Active projects','5'],['Average progress','54%'],['Budget used','48%']],Tourism:[['Visitors','112'],['Income received',KES(212400)],['Outstanding',KES(42000)]],'Boat and equipment':[['Trips','21'],['Fuel used','612 L'],['Open defects','1']],Finance:[['Income',KES(589000)],['Expenditure',KES(211300)],['Awaiting approval','2']],Donation:[['Donors','9'],['Recurring','4'],['Total',KES(190000)]],BMU:[['Active BMUs','3'],['Community activities','8'],['Meetings','3']],Governance:[['Board meetings','1'],['Resolutions','2'],['Open actions','3']],'Staff attendance':[['Staff on roster','12'],['Average attendance','96%'],['On leave','1']]};
 const Reports=()=>{
- const {role,settings,bmuId,log,toast,audit,can}=useApp();
- const [view,setView]=useState(null);
+ const {role,settings,bmuId,log,toast,audit,can,patrols}=useApp();
+ const [view,setView]=useState(null);const [fv,setFv]=useState(null);
+ const pii=piiOk(role,settings);
+ const fl=can('patrols')?(role==='bmu'?patrols.filter(p=>p.bmu===bmuId):patrols).filter(p=>(p.enc||[]).length||p.status==='Completed'):[];
+ const agg=INFR.map(i=>{const es=fl.flatMap(p=>(p.enc||[]).filter(e=>+e.code===i[0]));return {id:'c'+i[0],code:i[0],name:i[2],cases:es.length,people:new Set(es.map(e=>e.name)).size,seized:es.filter(e=>e.seized).length};}).filter(r=>r.cases);
+ const compl=fl.flatMap(p=>p.enc||[]).filter(e=>!e.code).length;
  const list=REPORTS.filter(r=>r.roles.includes(role));
  const blocked=(role==='fisheries'&&!settings.fishDl)||(role==='bmu'&&!settings.bmuDl);
  const dl=(r,kind)=>{log('Report download','Reports',r.id);toast(`Download logged: ${r.id} (${kind}). Demo only, no file is created.`);};
@@ -947,8 +1122,11 @@ const Reports=()=>{
  return html`<div><${PageHead} title="Reports & Documents" sub=${role==='bmu'?'Authorised reports for '+bmuName(bmuId):'Generate, view and download authorised reports'}/>
  ${blocked&&html`<${Notice} tone="warn" title="Download is switched off for your role">You can view authorised reports. The Super Admin controls whether ${role==='bmu'?'BMU Representatives':'the Fisheries Officer'} can download them.</${Notice}>`}
  <${Card}><${Table} cols=${[{h:'Report',k:'name'},{h:'Type',k:'type'},{h:'Reference',k:'id',cls:'mono'},{h:'Date',k:'date'},{h:'',k:'a',cls:'act',r:r=>html`<span className="btnrow"><${Btn} kind="small" icon="eye" onClick=${()=>setView(r)}>View</${Btn}>${blocked?html`<span className="muted small"><${Icon} n="lock" s=${12}/> Download off</span>`:html`<${Btn} kind="small" icon="download" onClick=${()=>dl(r,'PDF')}>PDF</${Btn}><${Btn} kind="small" icon="download" onClick=${()=>dl(r,'Excel')}>Excel</${Btn}>`}</span>`}]} rows=${list}/></${Card}>
+ ${fl.length>0&&html`<${Card} title="Patrol forms" sub="Form 1A, the BMU Patrol Reporting Form, the Seizure Form and the MCS Outcome sheet, generated from each patrol record" right=${window.POPS_PWA?html`<${Btn} kind="small" icon="download" onClick=${()=>{saveCSV('pops-form-1A-all-patrols.csv',encRows(fl,pii));log('Exported Form 1A rows (all patrols)','Reports','CSV');toast('CSV exported');}}>Export all Form 1A rows (CSV)</${Btn}>`:html`<span className="muted small">CSV export works in the installed app link.</span>`}><${Table} cols=${[{h:'Patrol',k:'id',cls:'mono'},{h:'Date',k:'date'},{h:'BMU',k:'bmu',r:r=>bmuName(r.bmu)},{h:'Checks',k:'c',cls:'num',r:r=>(r.enc||[]).length},{h:'Infringements',k:'i',cls:'num',r:r=>(r.enc||[]).filter(e=>e.code).length},{h:'Seizures',k:'s',cls:'num',r:r=>(r.seiz||[]).length},{h:'',k:'a',cls:'act',r:r=>html`<${Btn} kind="small" icon="eye" onClick=${()=>setFv(r.id)}>Open forms</${Btn}>`}]} rows=${fl}/></${Card}>
+ <${Card} title="Infringements by type" sub="All patrols you can see. This is the summary the MCS outcome form asks for."><${Table} empty="No infringements recorded." cols=${[{h:'Code',k:'code',cls:'num'},{h:'Infringement',k:'name'},{h:'Cases',k:'cases',cls:'num'},{h:'People',k:'people',cls:'num'},{h:'With seizure',k:'seized',cls:'num'}]} rows=${agg}/><p className="muted small">${compl} compliance checks with no infringement were also recorded.</p></${Card}>`}
  <div className="grid2">${(role==='admin'||role==='board')&&html`<${Card} title="Document archive"><ul className="doclist">${DOCS.map(d=>html`<li key=${d}><${Icon} n="reports" s=${16}/>${d}</li>`)}</ul></${Card}>`}
  ${role==='admin'&&html`<${Card} title="Download history" sub="Every download logs user, date and time, report name and reference"><${Table} empty="No downloads yet." cols=${[{h:'User',k:'1',r:r=>r[1]},{h:'Date and time',k:'0',r:r=>r[0]},{h:'Reference',k:'4',cls:'mono',r:r=>r[4]}]} rows=${hist.map((h,i)=>Object.assign([...h],{id:i}))}/></${Card}>`}</div>
+ <${Modal} wide=${true} open=${!!fv} onClose=${()=>setFv(null)} title=${fv||''}>${fv&&html`<${PatrolForms} key=${fv} p=${patrols.find(p=>p.id===fv)}/>`}</${Modal}>
  <${Modal} open=${!!view} onClose=${()=>setView(null)} title=${view?view.name:''}>${view&&html`<p className="muted small mono">${view.id} · ${view.date}</p><div className="kpis small">${(REP_SUM[view.type]||[]).map(k=>html`<${Kpi} key=${k[0]} label=${k[0]} value=${k[1]}/>`)}</div><p className="muted small">Sample figures. Real reports follow the filters for date range, BMU, project and activity.</p>`}</${Modal}></div>`;
 };
 
@@ -957,7 +1135,7 @@ const SYM={w:['Create / edit','good'],s:['Own or assigned','info'],r:['Read only
 const Permissions=()=>{
  const {settings,setSettings,assign,setAssign,log,toast,setRole,go}=useApp();
  const [tab,setTab]=useState('roles');
- const tg=(k,label)=>v=>{setSettings(s=>({...s,[k]:v}));log('Toggled setting: '+label+' = '+(v?'ON':'OFF'),'Settings & Permissions',k==='fishDl'?'SET-FISH-DL':'SET-BMU-DL');toast(label+': '+(v?'ON':'OFF'));};
+ const tg=(k,label)=>v=>{setSettings(s=>({...s,[k]:v}));log('Toggled setting: '+label+' = '+(v?'ON':'OFF'),'Settings & Permissions',k==='fishDl'?'SET-FISH-DL':k==='piiBmu'?'SET-PII-BMU':'SET-BMU-DL');toast(label+': '+(v?'ON':'OFF'));};
  const flip=(o,p)=>{const has=assign[o.id].includes(p.id);setAssign(a=>({...a,[o.id]:has?a[o.id].filter(x=>x!==p.id):[...a[o.id],p.id]}));log(has?'Revoked project access':'Assigned officer to project','Settings & Permissions',o.name+' / '+p.name);toast(has?o.name+' no longer has access to '+p.code:o.name+' can now open '+p.code);};
  const [pub,setPub]=useState({a:true,b:true,c:false});
  const rk=Object.keys(ROLES);
@@ -966,7 +1144,7 @@ const Permissions=()=>{
  ${tab==='roles'&&html`<${Card} title="Who can do what" sub="Enforced by the server and database, not by hiding menus"><div className="tscroll"><table className="tbl matrix"><thead><tr><th>Module</th>${rk.map(k=>html`<th key=${k} className="mc">${ROLES[k].label}</th>`)}</tr></thead><tbody>${MODS.map(m=>html`<tr key=${m.id}><td>${m.label}</td>${rk.map(k=>{const v=ROLES[k].mods[m.id];return html`<td key=${k} className="mc">${v?html`<span className=${'mx '+SYM[v][1]} title=${SYM[v][0]}>${v==='w'?'Full':v==='s'?'Own':'Read'}</span>`:html`<span className="mx none">—</span>`}</td>`;})}</tr>`)}</tbody></table></div><p className="muted small">Full = create and edit · Own = own or assigned records · Read = read only. Even Full does not bypass financial approval.</p></${Card}>`}
  ${tab==='proj'&&html`<${Card} title="Conservation Officer project assignments" sub="An officer can only open projects ticked here. Officers cannot assign themselves or each other."><div className="tscroll"><table className="tbl matrix"><thead><tr><th>Officer</th>${PROJECTS.map(p=>html`<th key=${p.id} className="mc">${p.code}</th>`)}</tr></thead><tbody>${OFFICERS.map(o=>html`<tr key=${o.id}><td>${o.name}</td>${PROJECTS.map(p=>html`<td key=${p.id} className="mc"><input type="checkbox" aria-label=${o.name+' access to '+p.name} checked=${assign[o.id].includes(p.id)} onChange=${()=>flip(o,p)}/></td>`)}</tr>`)}</tbody></table></div>
  <p className="muted small">${PROJECTS.map(p=>p.code+' = '+p.name).join(' · ')}</p><div className="rowx"><${Btn} icon="eye" onClick=${()=>{setRole('officer');go('projects');}}>View as Rehema Salim (Conservation Officer)</${Btn}></div></${Card}>`}
- ${tab==='dl'&&html`<div className="grid2"><${Card} title="Report downloads" sub="Two independent settings. Neither grants editing, approving or administrative rights."><ul className="sharelist"><li><span>Allow BMU Representatives to download reports</span><${Toggle} id="t-bmu" on=${settings.bmuDl} onChange=${tg('bmuDl','BMU Representatives download')} label="Allow BMU Representatives to download reports"/></li><li><span>Allow Fisheries Officer to download reports</span><${Toggle} id="t-fish" on=${settings.fishDl} onChange=${tg('fishDl','Fisheries Officer download')} label="Allow Fisheries Officer to download reports"/></li></ul><p className="muted small">Every download is logged with user, date and time, report name and report reference.</p></${Card}>
+ ${tab==='dl'&&html`<div className="grid2"><${Card} title="Report downloads" sub="Two independent settings. Neither grants editing, approving or administrative rights."><ul className="sharelist"><li><span>Allow BMU Representatives to download reports</span><${Toggle} id="t-bmu" on=${settings.bmuDl} onChange=${tg('bmuDl','BMU Representatives download')} label="Allow BMU Representatives to download reports"/></li><li><span>Show fisher ID and phone numbers to BMU Representatives</span><${Toggle} id="t-pii" on=${!!settings.piiBmu} onChange=${tg('piiBmu','Fisher ID and phone visible to BMU Representatives')} label="Show fisher ID and phone numbers to BMU Representatives"/></li><li><span>Allow Fisheries Officer to download reports</span><${Toggle} id="t-fish" on=${settings.fishDl} onChange=${tg('fishDl','Fisheries Officer download')} label="Allow Fisheries Officer to download reports"/></li></ul><p className="muted small">Every download is logged with user, date and time, report name and report reference.</p></${Card}>
  <${Card} title="Public website" sub="patteconservation.com stays separate. Only approved items are shared."><ul className="sharelist">${[['a','Restoration milestones (approved summaries)'],['b','Tourism packages and visitor code of conduct'],['c','Annual impact summary']].map(r=>html`<li key=${r[0]}><span>${r[1]}</span><${Toggle} on=${pub[r[0]]} onChange=${v=>{setPub(p=>({...p,[r[0]]:v}));log('Changed public website sharing','Settings & Permissions',r[1]);toast(r[1]+': '+(v?'shared':'not shared'));}} label=${r[1]}/></li>`)}</ul><h3 className="mini-h">Always protected</h3><p className="muted small">Ranger patrol records and GPS tracks · enforcement incidents and evidence · staff records · finance · visitor personal information · internal project records · sensitive locations · confidential Board documents.</p></${Card}></div>`}
  ${tab==='sys'&&html`<div className="grid2"><${Card} title="Security"><${KV} rows=${[['Sign-in','Individual accounts, password reset'],['Two-factor sign-in','Optional, per user'],['Data in transit','Encrypted'],['Bulk download protection','Limit of 50 records per export'],['Backups','Automated daily, last 11 Nov 2026 02:00']]}/></${Card}>
  <${Card} title="Left out on purpose"><ul className="ticks x"><li>No Fisheries Monitoring module</li><li>No landing-site activity, fish catch, species, weight or effort forms</li><li>No separate ranger or management app</li><li>No automatic cross-project access for officers</li><li>No automatic access for external partners</li><li>No automatic public sharing of internal records</li><li>No automatic financial approval when a payment is entered</li></ul></${Card}></div>`}
@@ -985,26 +1163,38 @@ const Audit=()=>{
 };
 /* ============ solution overview: the story for the client ============ */
 const STEPS=[
- ['ranger','dashboard','Ranger','Start a patrol at sea','On the phone, tap Start patrol. The map follows the boat and records the GPS track.'],
- ['ranger','dashboard','Ranger','Report an incident with a photo, offline','Switch on Simulate no signal, add an incident and a photo, then complete and submit. It waits on the phone.'],
- ['ranger','dashboard','Ranger','Back in signal, sync','Go back online and tap Sync now. The records arrive once, with no duplicates.'],
- ['admin','patrols','Super Admin','Review the patrol and its GPS track','Open PT-2026-0421. The recorded track is on the map and the patrol waits for review.'],
- ['admin','incidents','Super Admin','Refer the incident and keep the record','Move the incident from Submitted to Referred. POps records and tracks it. It does not give enforcement powers.'],
+ ['ranger','dashboard','Ranger','Start a patrol: confirm crew, vessel and area','Tap Start patrol. Check who is aboard, the boat and the patrol area. The map then follows the boat and records the GPS track.'],
+ ['ranger','dashboard','Ranger','Record a fisher check and a seizure, with no signal','Tap Fisher check and fill one Form 1A row. Choose an infringement code and switch on Items seized to make the Seizure Form too. Switch on Simulate no signal under Me to try it offline.'],
+ ['ranger','dashboard','Ranger','Finish: the four forms are already filled in','Complete the patrol, tick the challenges, sign with a finger and look at Form 1A, the Patrol Report, the Seizure Form and the MCS sheet. Submit, then sync when signal returns.'],
+ ['admin','patrols','Super Admin','Open the patrol and its Forms tab','Open PT-2026-0416. See the same four forms in the paper layout, with ID and phone numbers shown to this role only.'],
+ ['admin','incidents','Super Admin','Refer an incident and keep the record','Move the incident from Submitted to Referred. POps records and tracks it. It does not give enforcement powers.'],
+ ['admin','reports','Super Admin','Infringements by type and CSV export','See the summary the MCS outcome form asks for, across all patrols. In the installed app, export every Form 1A row to CSV.'],
  ['board','finance','Board Chairperson','Money follows the same rules','Entries are made by Finance and approved by the Board. The Super Admin cannot skip the approval.'],
- ['fisheries','reports','Fisheries Officer','Partners get read-only access','The Super Admin switches report downloads on or off. Every download is logged.'],
+ ['fisheries','reports','Fisheries Officer','Partners get read-only access','The Super Admin switches report downloads on or off. Fisher IDs and phones are masked unless the role is allowed to see them. Every download is logged.'],
  ['admin','audit','Super Admin','Every step is on record','The Audit Trail shows who did what, when, and to which record.']
 ];
 const GAPS=[
- ['Patrol notes live on paper, in WhatsApp and in photos on personal phones.','One structured patrol record with GPS track, observations and photos, created in the field.','ranger','dashboard'],
+ ['One patrol is written four times: Form 1A, the BMU Patrol Report, the Seizure Form and the MCS Outcome sheet.','The ranger records the patrol once. POps fills in all four in the same layout and keeps them linked to the patrol.','ranger','dashboard'],
+ ['Handwritten IDs, phone numbers and names are hard to read. In the March report the patrol reference and BMU name were left blank.','Typed entries, a patrol reference made by POps, and the BMU and boat filled in from the assignment.','admin','patrols'],
+ ['Two infringement lists are in use: 10 codes on Form 1A, and four groups (people, gears, crafts, fish) on the current template.','One list in POps: the 10 Form 1A codes, plus four types from the current template that Fisheries should confirm.','ranger','dashboard'],
+ ['A blank Seizure Form is attached even when nothing was seized.','POps makes a Seizure Form only when an item is seized, filled from the fisher check: officer, station, place and time.','admin','patrols'],
+ ['Fisher ID and phone numbers travel on paper and in photos, open to anyone who holds the page.','Masked by role. BMU Representatives see them only if the Super Admin allows it. Exports are logged.','admin','permissions'],
  ['No signal at sea, so notes are written later and details are lost.','Records, photos and the map area are kept on the phone and sync without duplicates when signal returns.','ranger','dashboard'],
  ['Incidents are reported by call or message, with no status or follow-up.','Each incident has a reference, a status from Submitted to Closed, a referral to KWS, KFS or Fisheries, and evidence.','admin','incidents'],
  ['The LMMA boundary is a list of coordinates that nobody has verified on a map.','Boundary and zones drawn on a real map. Each point is verified and every version is kept.','admin','iweni-lmma'],
+ ['Convictions, fines and prosecution outcomes are never added back to the patrol.','The MCS follow-up columns are filled in later against the same patrol, and roll up into one summary.','admin','reports'],
  ['Anyone with the spreadsheet sees everything, including finance and visitor details.','Roles control every screen. Officers see only their assigned projects, and the database enforces it.','officer','projects'],
- ['Reports are rebuilt by hand for each donor, BMU and agency.','Reports come from the records. Downloads are switched on or off per partner and logged.','fisheries','reports'],
  ['Tourism cash and M-Pesa payments do not match what reaches the books.','Booking, payment, receipt and reconciliation sit in one chain. Finance reconciles each payment.','tourism','tourism'],
  ['Fuel, engine faults and boat trips are remembered, not recorded.','A trip log with fuel and a defect report that reaches the Super Admin.','cox','boats'],
- ['Board members chase information before each meeting.','One governance view with meetings, resolutions, action points and approvals.','board','bmus'],
  ['Nobody can say who changed what.','An audit trail of who did what, when and to which record.','admin','audit']
+];
+const QUESTIONS=[
+ ['Patrol Costing table','Annex 2 lists it as an attachment, but it was not in the forms we received. Please send the template so POps can fill it from fuel, boat and crew records.'],
+ ['Infringement types 11 to 14','These come from the current template (poor handling, polluting methods, transport of immature fish and illegal gears). Do they stay as codes, or fold into the 10 official codes?'],
+ ['"JCMA" name','Form 1A asks for it. Confirm the full name and the value to print for Pate and Shanga.'],
+ ['Draft marking','The current template is marked "TOT\'s draft, July 2023, limited circulation". Confirm which version Patte and the Fisheries Department treat as final.'],
+ ['Who receives which form','Confirm where Form 1A, the Patrol Report, Form DF/SZ and the MCS sheet are sent, and by when.'],
+ ['Printed and electronic signatures','Confirm whether a printed POps form with a drawn signature is accepted, or whether a signed paper copy must be kept.']
 ];
 const REALVS=[
  ['Map','Real satellite and street maps in the installed app. The preview link shows a vector chart.','Licensed map provider or Patte\'s own tile server, with the verified boundary kept in the database.'],
@@ -1013,7 +1203,9 @@ const REALVS=[
  ['Accounts and access','A role switcher so the client can see every view.','Individual sign-in, optional two-factor, and roles enforced in the API and the database.'],
  ['Data','Sample data held in the browser.','PostgreSQL with PostGIS, daily backups and project-level row security.'],
  ['Tourism payments','Payments are entered by hand.','M-Pesa confirmations pulled in automatically, with manual reconciliation by Finance.'],
- ['Reports','Downloads are logged. CSV export for key reports.','Server-made PDF and Excel on Patte letterhead.'],
+ ['The four forms','Form 1A, Patrol Report, Seizure Form and MCS sheet in the paper layout. Print or save as PDF, and CSV export, in the installed app link.','Server-made PDF on the final layouts once Patte and Fisheries approve them.'],
+ ['Signatures','Drawn on the phone screen.','Signing rules agreed with the Fisheries Department, with each signature on the audit trail.'],
+ ['Reports','Downloads are logged. Summary of infringements by type.','Server-made PDF and Excel on Patte letterhead.'],
  ['Notifications','An in-app list.','Push notifications to phones, and email.'],
  ['Public website','Sharing switches.','Approved items published to the website through a separate, checked feed.']
 ];
@@ -1024,6 +1216,7 @@ const RISKS=[
  ['Weak or no signal','Offline-first design with a saved map area and queued sync.'],
  ['Visitor and personal data','Collect only what is needed, mask contacts, log who views them, and set retention rules in line with Kenya\'s Data Protection Act, 2019. Confirm the details with Patte\'s legal adviser.'],
  ['Boundary not yet settled','A verification workflow with versions and sign-off before any enforcement use.'],
+ ['Electronic forms in place of paper','Agree with the Fisheries Department whether a printed POps form is accepted for Form DF/SZ, or keep a signed paper copy until it is.'],
  ['Enforcement expectations','POps records and tracks. Referral goes to KWS, KFS, the Fisheries Department or the Police.'],
  ['Adoption and literacy','Large buttons, English and Kiswahili, training, and a four-week pilot with two rangers.'],
  ['Map licensing','The demo uses public tile servers. The live build uses a licensed provider or a self-hosted tile server.'],
@@ -1031,7 +1224,7 @@ const RISKS=[
 ];
 const PHASES=[
  ['1','Foundation','Accounts, roles, audit trail, staff, Iweni boundary on a real map',true],
- ['2','Field operations pilot','Ranger app, patrols, incidents, offline sync, boats and fuel',true],
+ ['2','Field operations pilot','Ranger app, Form 1A, Patrol Report, Seizure Form, MCS outcome, offline sync, boats and fuel',true],
  ['3','Conservation and community','Projects, coral restoration, BMUs, partners',true],
  ['4','Income and governance','Tourism, finance, donations, Board approvals',true],
  ['5','Reporting and integrations','Server-made reports, M-Pesa, website feed, push notifications',false]
@@ -1040,15 +1233,17 @@ const Overview=()=>{
  const {setRole,go}=useApp();
  const jump=(r,m)=>{setRole(r);go(m);};
  return html`<div className="ov">
- <section className="ov-hero"><div><span className="eyebrow">Patte Conservation CBO · Pate Island, Lamu County</span><h1>One platform for every conservation operation</h1><p>POps brings patrols, incidents, the Iweni LMMA, projects, tourism, finance and governance into one system. Rangers work from a phone, offline. The Super Admin and the Board see the same records, each within their role.</p>
+ <section className="ov-hero"><div><span className="eyebrow">Patte Conservation CBO · Pate Island, Lamu County</span><h1>One platform for every conservation operation</h1><p>POps brings patrols, incidents, the Iweni LMMA, projects, tourism, finance and governance into one system. Rangers work from a phone, offline, and record each patrol once. The four paper forms, Form 1A, the BMU Patrol Report, the Seizure Form and the MCS Outcome sheet, are then filled in for them. The Super Admin and the Board see the same records, each within their role.</p>
  <div className="ov-cta"><${Btn} kind="primary" icon="play" onClick=${()=>jump('ranger','dashboard')}>Start the walkthrough</${Btn}><a className="btn" href="#field"><${Icon} n="phone" s=${16}/>Open the Ranger app full-screen</a></div></div>
- <ul className="ov-stats"><li><b>16</b><span>modules from the specification</span></li><li><b>9</b><span>role views, each with its own limits</span></li><li><b>1</b><span>login for the whole organisation</span></li><li><b>0</b><span>separate apps to maintain</span></li></ul></section>
+ <ul className="ov-stats"><li><b>16</b><span>modules from the specification</span></li><li><b>9</b><span>role views, each with its own limits</span></li><li><b>1</b><span>login for the whole organisation</span></li><li><b>4</b><span>paper forms made from one capture</span></li></ul></section>
 
  <${Card} title="A patrol from the sea to the Board" sub="Each step opens the right role and screen. Follow them in order.">
   <ol className="steps">${STEPS.map((s,i)=>html`<li key=${i}><span className="sn">${i+1}</span><div><span className="who">${s[2]}</span><h3>${s[3]}</h3><p>${s[4]}</p></div><button className="btn small" onClick=${()=>jump(s[0],s[1])}>Open<${Icon} n="chev" s=${14}/></button></li>`)}</ol></${Card}>
 
  <${Card} title="Gaps in day-to-day operations and how POps closes them" sub="These are common gaps in community conservation work. Confirm each one with the Patte team before the meeting.">
   <div className="tscroll"><table className="tbl gaps"><thead><tr><th>What goes wrong</th><th>How POps closes it</th><th></th></tr></thead><tbody>${GAPS.map((g,i)=>html`<tr key=${i}><td>${g[0]}</td><td>${g[1]}</td><td className="act"><button className="link" onClick=${()=>jump(g[2],g[3])}>See it<${Icon} n="chev" s=${14}/></button></td></tr>`)}</tbody></table></div></${Card}>
+
+ <${Card} title="Open questions for Patte" sub="Found while matching POps to the forms. Answers change what we build."><ul className="risks">${QUESTIONS.map(q=>html`<li key=${q[0]}><b>${q[0]}</b><span>${q[1]}</span></li>`)}</ul></${Card}>
 
  <div className="grid2">
   <${Card} title="What is real in this demo, and what the live build adds"><div className="tscroll"><table className="tbl"><thead><tr><th>Area</th><th>In this demo</th><th>In the live build</th></tr></thead><tbody>${REALVS.map(r=>html`<tr key=${r[0]}><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td></tr>`)}</tbody></table></div></${Card}>
@@ -1062,8 +1257,8 @@ const Overview=()=>{
 /* ============ field app: the ranger experience (same platform, phone layout) ============ */
 const PID='PT-2026-0421';
 const FT={
- en:{hello:'Hello',assigned:'Assigned patrol',start:'Start patrol',pause:'Pause',resume:'Resume',obs:'Observation',inc:'Incident',photo:'Photo',complete:'Complete patrol',submit:'Submit',online:'Online',offline:'Offline',synced:'All synced',pending:'pending sync',home:'Home',map:'Map',records:'Records',me:'Me',gpsOn:'GPS is tracking this patrol. Your team can see it.',gpsPaused:'Paused. GPS is not tracking.',save:'Save',cancel:'Cancel',notes:'Notes',category:'Category',desc:'What happened?',persons:'Persons involved (if known)',addPhoto:'Add photo',duration:'Duration',distance:'Distance',back:'Back',noPatrol:'No patrol assigned right now. The Super Admin will assign the next one.',locate:'My location',saveMap:'Save map for offline use',language:'Language',gpsSource:'GPS source',simulated:'Demo route',device:'This phone',install:'Install app',signout:'Sign out',recent:'Recent patrols',status:'Status',type:'Type',newObs:'Record observation',newInc:'Report incident',summary:'Complete patrol',photos:'Photos',crew:'Crew',myRecords:'My records',syncNow:'Sync now',backOnline:'Back online.',waiting:'record waiting to sync.',km:'km'},
- sw:{hello:'Habari',assigned:'Doria uliyopangiwa',start:'Anza doria',pause:'Simama',resume:'Endelea',obs:'Uchunguzi',inc:'Tukio',photo:'Picha',complete:'Maliza doria',submit:'Tuma',online:'Mtandaoni',offline:'Nje ya mtandao',synced:'Yote yametumwa',pending:'inasubiri kutumwa',home:'Nyumbani',map:'Ramani',records:'Rekodi',me:'Mimi',gpsOn:'GPS inafuatilia doria hii. Timu yako inaona.',gpsPaused:'Umesimama. GPS haifuatilii.',save:'Hifadhi',cancel:'Ghairi',notes:'Maelezo',category:'Aina',desc:'Nini kimetokea?',persons:'Watu waliohusika (kama wanajulikana)',addPhoto:'Ongeza picha',duration:'Muda',distance:'Umbali',back:'Rudi',noPatrol:'Hakuna doria uliyopangiwa kwa sasa. Msimamizi atakupangia inayofuata.',locate:'Nilipo',saveMap:'Hifadhi ramani',language:'Lugha',gpsSource:'Chanzo cha GPS',simulated:'Njia ya majaribio',device:'Simu hii',install:'Sakinisha programu',signout:'Toka',recent:'Doria za hivi karibuni',status:'Hali',type:'Aina',newObs:'Andika uchunguzi',newInc:'Ripoti tukio',summary:'Maliza doria',photos:'Picha',crew:'Wafanyakazi',myRecords:'Rekodi zangu',syncNow:'Tuma sasa',backOnline:'Umerudi mtandaoni.',waiting:'rekodi inasubiri kutumwa.',km:'km'}
+ en:{hello:'Hello',assigned:'Assigned patrol',start:'Start patrol',pause:'Pause',resume:'Resume',obs:'Observation',inc:'Incident',photo:'Photo',complete:'Complete patrol',submit:'Submit',online:'Online',offline:'Offline',synced:'All synced',pending:'pending sync',home:'Home',map:'Map',records:'Records',me:'Me',gpsOn:'GPS is tracking this patrol. Your team can see it.',gpsPaused:'Paused. GPS is not tracking.',save:'Save',cancel:'Cancel',notes:'Notes',category:'Category',desc:'What happened?',persons:'Persons involved (if known)',addPhoto:'Add photo',duration:'Duration',distance:'Distance',back:'Back',noPatrol:'No patrol assigned right now. The Super Admin will assign the next one.',locate:'My location',saveMap:'Save map for offline use',language:'Language',gpsSource:'GPS source',simulated:'Demo route',device:'This phone',install:'Install app',signout:'Sign out',recent:'Recent patrols',status:'Status',type:'Type',newObs:'Record observation',newInc:'Report incident',summary:'Complete patrol',photos:'Photos',crew:'Crew',myRecords:'My records',syncNow:'Sync now',backOnline:'Back online.',waiting:'record waiting to sync.',km:'km',chk:'Fisher check',time:'Time',fname:"Fisher's name",idno:'ID No.',phone:'Phone No.',gear:'Gear type',gearId:'Gear ID',gqty:'Gear quantity',ground:'Fishing location / ground',origin:'BMU origin',infr:'Infringement',action:'Action taken',details:'Items confiscated, details and action taken',seizedQ:'Items seized',itemName:'Item seized',unit:'Unit',qty:'Quantity',value:'Estimated value (KES)',addItem:'Add item',checks:'Checks',infrN:'Infringements',seizN:'Seizures',objective:'Patrol objective',participants:'Patrol participants',vessel:'Vessel information',vname:'Name of patrol vessel',vtype:'Vessel type (material and length)',vhp:'Horsepower (HP) of engine',areaT:'Patrol area (fishing grounds, landing sites)',before:'Before you go',goPatrol:'Start patrol',challenges:'Challenges encountered',fuel:'Fuel used (litres)',attached:'Attached documents',prepared:'Prepared by',designation:'Designation',signHere:'Sign here',previewT:'Forms made from your records',forms:'Forms',viewForms:'View forms'},
+ sw:{hello:'Habari',assigned:'Doria uliyopangiwa',start:'Anza doria',pause:'Simama',resume:'Endelea',obs:'Uchunguzi',inc:'Tukio',photo:'Picha',complete:'Maliza doria',submit:'Tuma',online:'Mtandaoni',offline:'Nje ya mtandao',synced:'Yote yametumwa',pending:'inasubiri kutumwa',home:'Nyumbani',map:'Ramani',records:'Rekodi',me:'Mimi',gpsOn:'GPS inafuatilia doria hii. Timu yako inaona.',gpsPaused:'Umesimama. GPS haifuatilii.',save:'Hifadhi',cancel:'Ghairi',notes:'Maelezo',category:'Aina',desc:'Nini kimetokea?',persons:'Watu waliohusika (kama wanajulikana)',addPhoto:'Ongeza picha',duration:'Muda',distance:'Umbali',back:'Rudi',noPatrol:'Hakuna doria uliyopangiwa kwa sasa. Msimamizi atakupangia inayofuata.',locate:'Nilipo',saveMap:'Hifadhi ramani',language:'Lugha',gpsSource:'Chanzo cha GPS',simulated:'Njia ya majaribio',device:'Simu hii',install:'Sakinisha programu',signout:'Toka',recent:'Doria za hivi karibuni',status:'Hali',type:'Aina',newObs:'Andika uchunguzi',newInc:'Ripoti tukio',summary:'Maliza doria',photos:'Picha',crew:'Wafanyakazi',myRecords:'Rekodi zangu',syncNow:'Tuma sasa',backOnline:'Umerudi mtandaoni.',waiting:'rekodi inasubiri kutumwa.',km:'km',chk:'Ukaguzi wa mvuvi',time:'Saa',fname:'Jina la mvuvi',idno:'Nambari ya kitambulisho',phone:'Nambari ya simu',gear:'Aina ya zana',gearId:'Nambari ya zana',gqty:'Idadi ya zana',ground:'Eneo la uvuvi',origin:'BMU anakotoka',infr:'Kosa',action:'Hatua iliyochukuliwa',details:'Vitu vilivyokamatwa, maelezo na hatua iliyochukuliwa',seizedQ:'Vitu vilivyokamatwa',itemName:'Kitu kilichokamatwa',unit:'Kipimo',qty:'Idadi',value:'Thamani inayokadiriwa (KES)',addItem:'Ongeza kitu',checks:'Ukaguzi',infrN:'Makosa',seizN:'Ukamataji',objective:'Lengo la Patrol',participants:'Washikadau walioshiriki katika patrol',vessel:'Tarifa kuhusu Chombo',vname:'Jina la Chombo',vtype:'Aina ya Chombo (nyenzo na urefu)',vhp:'Nguvu ya Engine (HP)',areaT:'Eneo la Patrol',before:'Kabla ya kuondoka',goPatrol:'Anza doria',challenges:'Changamoto',fuel:'Mafuta yaliyotumika (lita)',attached:'Nyaraka zilizoambatishwa',prepared:'Mwandishi wa Repoti',designation:'Cheo',signHere:'Sahihi hapa',previewT:'Fomu zilizotengenezwa kutokana na rekodi zako',forms:'Fomu',viewForms:'Tazama fomu'}
 };
 const lsGet=(k,d)=>{try{const v=localStorage.getItem('pops-'+k);return v?JSON.parse(v):d;}catch(e){return d;}};
 const lsSet=(k,v)=>{try{localStorage.setItem('pops-'+k,JSON.stringify(v));}catch(e){}};
@@ -1074,7 +1269,7 @@ const hhmm=()=>pad(new Date().getHours())+':'+pad(new Date().getMinutes());
 const useFieldStore=({setPatrols,setIncidents,log,toast})=>{
  const [tab,setTab]=useState('home');const [scr,setScr]=useState('home');
  const [st,setSt]=useState('idle');const [sec,setSec]=useState(0);const [km,setKm]=useState(0);
- const [obs,setObs]=useState([]);const [incs,setIncs]=useState([]);const [photos,setPhotos]=useState([]);
+ const [obs,setObs]=useState([]);const [incs,setIncs]=useState([]);const [photos,setPhotos]=useState([]);const [enc,setEnc]=useState([]);const [seiz,setSeiz]=useState([]);const [pre,setPre]=useState(null);
  const [track,setTrack]=useState([]);const [pos,setPos]=useState(null);const [gpsErr,setGpsErr]=useState('');
  const [offline,setOffline]=useState(false);const [queue,setQueue]=useState(()=>lsGet('queue',[]));
  const [lang,setLangS]=useState(()=>lsGet('lang','en'));const [gps,setGps]=useState('sim');
@@ -1093,30 +1288,34 @@ const useFieldStore=({setPatrols,setIncidents,log,toast})=>{
   const i=setInterval(()=>{simD.current+=4.1/2.78;const L2=SIM_LEN*2;let d=simD.current%L2;if(d>SIM_LEN)d=L2-d;const xy=along(SIM_ROUTE,d/SIM_LEN);const ll=unproj(xy[0]+(Math.random()-.5)*.6,xy[1]+(Math.random()-.5)*.6);setPos({lat:ll[0],lon:ll[1],acc:6});addPoint(ll);},1000);
   return()=>clearInterval(i);
  },[st,gps]);
- const start=()=>{setSt('active');setScr('patrol');setSec(0);setKm(0);setObs([]);setIncs([]);setPhotos([]);setTrack([]);last.current=null;simD.current=0;setGpsErr('');
-  setPatrols(x=>x.map(p=>p.id===PID?{...p,status:'Active',start:hhmm()}:p));log('Started patrol','Patrols',PID);};
+ const start=pr=>{setSt('active');setScr('patrol');setSec(0);setKm(0);setObs([]);setIncs([]);setPhotos([]);setEnc([]);setSeiz([]);setPre(pr);setTrack([]);last.current=null;simD.current=0;setGpsErr('');
+  setPatrols(x=>x.map(p=>p.id===PID?{...p,status:'Active',start:hhmm(),objective:pr.objective,parts:pr.parts,vessel:pr.vessel,areas:pr.areas.filter(Boolean)}:p));log('Started patrol','Patrols',PID);};
  const togglePause=()=>setSt(s=>s==='active'?'paused':'active');
  const addObs=o=>{setObs(x=>[...x,{...o,at:hhmm(),ll:last.current}]);setScr('patrol');toast('Observation saved');};
  const addInc=o=>{setIncs(x=>[...x,{...o,at:hhmm(),ll:last.current}]);setScr('patrol');toast('Incident saved');};
+ const addEnc=(e,items,cp)=>{const rec={...e,n:enc.length+1,seized:items.length>0,ll:last.current};setEnc(x=>[...x,rec]);if(items.length)setSeiz(z=>[...z,mkSeizure(rec,items,cp,z.length+1)]);setScr('patrol');toast(items.length?'Check and seizure form saved':'Fisher check saved');};
  const addPhoto=f=>{if(!f)return;const url=URL.createObjectURL(f);setPhotos(x=>[...x,{url,at:hhmm(),ll:last.current}]);};
  const complete=()=>{setSt('paused');setScr('done');};
  const finalize=pl=>{
-  setPatrols(x=>x.map(p=>p.id===pl.pid?{...p,status:'Completed',review:'Pending review',end:pl.end,obs:pl.obs,inc:pl.incs.length,km:pl.km,track:pl.track}:p));
+  setPatrols(x=>x.map(p=>p.id===pl.pid?{...p,status:'Completed',review:'Pending review',end:pl.end,obs:pl.obs,inc:pl.incs.length,km:pl.km,track:pl.track,enc:pl.enc,seiz:pl.seiz,objective:pl.pre.objective,parts:pl.pre.parts,vessel:pl.pre.vessel,areas:pl.pre.areas.filter(Boolean),chal:pl.post.chal,attach:pl.post.attach,fuel:pl.post.fuel,prep:pl.post.prep,mcsx:{}}:p));
   setIncidents(x=>[...pl.incs.map((c,k)=>{const n=x.length-7+k;const ll=c.ll||pl.track[pl.track.length-1]||[-2.2131,41.0087];const xy=proj(ll[0],ll[1]);return {id:'INC-2026-'+String(92+n).padStart(4,'0'),date:stamp(),cat:c.c,ranger:'Hamisi Mwinyi',patrol:pl.pid,desc:c.d||'No description',persons:c.p||'None recorded',action:'Reported from the field app',ref:'None',stage:0,x:xy[0],y:xy[1],loc:'sensitive'};}),...x]);
  };
- const submit=()=>{const pl={pid:PID,end:hhmm(),obs:obs.length,incs,km,track,photos:photos.length};
-  if(offline){setPatrols(x=>x.map(p=>p.id===PID?{...p,status:'Pending Sync',obs:obs.length,inc:incs.length,km}:p));setQueue(q=>[...q,pl]);toast('Saved on this phone. It will sync when you are back online.');}
+ const submit=post=>{const pl={pid:PID,end:hhmm(),obs:obs.length,incs,km,track,photos:photos.length,enc,seiz,pre:pre||{objective:'Surveillance',parts:{bmu:2},vessel:{},areas:[]},post};
+  if(offline){setPatrols(x=>x.map(p=>p.id===PID?{...p,status:'Pending Sync',obs:obs.length,inc:incs.length,km,end:pl.end,enc,seiz}:p));setQueue(q=>[...q,pl]);toast('Saved on this phone. It will sync when you are back online.');}
   else{finalize(pl);log('Submitted patrol','Patrols',PID);toast('Patrol submitted for review');}
   setSt('idle');setScr('home');setTab('home');};
  const sync=()=>{queue.forEach(finalize);log('Synced offline records','Patrols',queue.length+' record(s)');toast('Synced '+queue.length+' record'+(queue.length>1?'s':'')+'. 0 duplicates.');setQueue([]);};
- const reset=()=>{setPatrols(x=>x.map(p=>p.id===PID?{...p,status:'Planned',review:'—',obs:0,inc:0,km:0,end:'—',track:undefined}:p));setSt('idle');setScr('home');setTab('home');setQueue([]);toast('Demo patrol reset to Planned');};
+ const reset=()=>{setPatrols(x=>x.map(p=>p.id===PID?{...p,status:'Planned',review:'—',obs:0,inc:0,km:0,end:'—',track:undefined,enc:[],seiz:[],attach:{},chal:{},prep:null,fuel:''}:p));setSt('idle');setScr('home');setTab('home');setQueue([]);toast('Demo patrol reset to Planned');};
  const locate=()=>{if(!navigator.geolocation){toast('This device has no GPS');return;}navigator.geolocation.getCurrentPosition(p=>{setPos({lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy});},e=>toast('Location unavailable: '+(e.message||'permission denied')),{enableHighAccuracy:true,timeout:12000});};
- return {tab,setTab,scr,setScr,st,sec,km,obs,incs,photos,track,pos,gpsErr,offline,setOffline,queue,lang,setLang,gps,setGps,start,togglePause,addObs,addInc,addPhoto,complete,submit,sync,reset,locate};
+ return {tab,setTab,scr,setScr,st,sec,km,obs,incs,photos,enc,seiz,pre,addEnc,track,pos,gpsErr,offline,setOffline,queue,lang,setLang,gps,setGps,start,togglePause,addObs,addInc,addPhoto,complete,submit,sync,reset,locate};
 };
 
 const PhotoPick=({fs,t})=>html`<label className="photobtn"><input type="file" accept="image/*" capture="environment" className="sr" onChange=${e=>{const f=e.target.files&&e.target.files[0];fs.addPhoto(f);e.target.value='';}}/><${Icon} n="camera" s=${22}/>${t('addPhoto')}</label>`;
 const Thumbs=({fs})=>fs.photos.length?html`<div className="thumbs">${fs.photos.map((p,i)=>html`<img key=${i} src=${p.url} alt=${'Photo '+(i+1)}/>`)}</div>`:null;
 const Seg=({value,onChange,opts,label})=>html`<div className="seg" role="group" aria-label=${label}>${opts.map(o=>html`<button key=${o[0]} className=${value===o[0]?'on':''} aria-pressed=${value===o[0]} onClick=${()=>onChange(o[0])}>${o[1]}</button>`)}</div>`;
+
+const Cnt=({v,on,label})=>html`<div className="cnt" role="group" aria-label=${label}><button type="button" aria-label=${'Fewer: '+label} onClick=${()=>on(Math.max(0,v-1))}>−</button><b>${v}</b><button type="button" aria-label=${'More: '+label} onClick=${()=>on(v+1)}>+</button></div>`;
+const blankCk=()=>({time:hhmm(),name:'',id:'',phone:'',gear:'Hand line',gearId:'',qty:'',ground:'',origin:'Pate',code:'',action:ACTIONS[0],details:'',seized:false,items:[{name:'',unit:'Piece',qty:'',value:''}]});
 
 const FieldApp=({embedded})=>{
  const {fs,patrols,incidents,setRole,go,user,pwa,signOut}=useApp();
@@ -1125,28 +1324,74 @@ const FieldApp=({embedded})=>{
  const mine=patrols.filter(p=>p.rangers.includes('Hamisi Mwinyi'));
  const mineInc=incidents.filter(i=>i.ranger==='Hamisi Mwinyi');
  const [of_,setOf_]=useState({t:'Marine wildlife',n:''});const [inf,setInf]=useState({c:INC_CATS[0],d:'',p:''});
+ const [ck,setCk]=useState(blankCk);
+ const [pr,setPr]=useState({objective:'Surveillance',parts:{bmu:2,cfd:0,cps:0,kfs:0,kcg:0,kma:0,other:0},vessel:{name:'',type:'',hp:''},areas:['','','']});
+ const [po,setPo]=useState({chal:{},fuel:'',attach:{costing:false,other:false},sign:null,name:'Hamisi Mwinyi',desig:'Marine Ranger (Patrol leader)'});
+ const [pvT,setPvT]=useState('capture');const [pv,setPv]=useState(null);
  const tm=`${pad(Math.floor(fs.sec/3600))}:${pad(Math.floor(fs.sec/60)%60)}:${pad(fs.sec%60)}`;
  const pend=fs.queue.length||(cur&&cur.status==='Pending Sync'?1:0);
  const mapData=useMapData();
+ const openPre=()=>{if(!cur)return;setPr({objective:cur.objective||'Surveillance',parts:{...cur.parts},vessel:{...cur.vessel},areas:[...(cur.areas||[]),'',''].slice(0,3)});fs.setScr('pre');};
  let body=null,nav=true;
- if(fs.scr==='patrol'){nav=false;body=html`<div className="fa-patrol">
+ if(fs.scr==='pre'){nav=false;const u=(k,v)=>setPr(o=>({...o,[k]:v}));body=html`<div className="fa-form"><h2>${t('before')}</h2><p className="muted small">${cur&&cur.id} · ${cur&&cur.date}</p>
+  <label htmlFor="pr-o">${t('objective')}</label><${Sel} id="pr-o" value=${pr.objective} onChange=${v=>u('objective',v)} opts=${OBJECTIVES}/>
+  <h3 className="fa-h">${t('participants')}</h3><div className="cnts">${AGENCIES.map(a=>html`<div key=${a[0]} className="cnt-r"><span>${a[1]}</span><${Cnt} v=${pr.parts[a[0]]||0} label=${a[1]} on=${v=>setPr(o=>({...o,parts:{...o.parts,[a[0]]:v}}))}/></div>`)}</div>
+  <h3 className="fa-h">${t('vessel')}</h3>
+  <label htmlFor="pr-vn">${t('vname')}</label><input id="pr-vn" value=${pr.vessel.name} onChange=${e=>setPr(o=>({...o,vessel:{...o.vessel,name:e.target.value}}))}/>
+  <label htmlFor="pr-vt">${t('vtype')}</label><input id="pr-vt" value=${pr.vessel.type} onChange=${e=>setPr(o=>({...o,vessel:{...o.vessel,type:e.target.value}}))}/>
+  <label htmlFor="pr-vh">${t('vhp')}</label><input id="pr-vh" value=${pr.vessel.hp} onChange=${e=>setPr(o=>({...o,vessel:{...o.vessel,hp:e.target.value}}))}/>
+  <h3 className="fa-h">${t('areaT')}</h3>${pr.areas.map((a,i)=>html`<input key=${i} aria-label=${'Patrol area '+(i+1)} placeholder=${(i+1)+'.'} value=${a} onChange=${e=>setPr(o=>({...o,areas:o.areas.map((x,j)=>j===i?e.target.value:x)}))}/>`)}
+  <div className="bgrid"><button className="big" onClick=${()=>fs.setScr('home')}>${t('cancel')}</button><button className="big go" onClick=${()=>fs.start(pr)}><${Icon} n="play" s=${22}/>${t('goPatrol')}</button></div></div>`;}
+ else if(fs.scr==='patrol'){nav=false;body=html`<div className="fa-patrol">
   <div className="fa-mapbox"><${GeoMap} key="pm" layers=${['zones']} items=${[]} tracks=${[]} compact=${true} showLive=${false} myPos=${fs.pos} myTrack=${fs.track} follow=${true} height="100%"/></div>
   <div className=${'gps '+(fs.st==='active'?'':'off')}><i/>${fs.st==='active'?t('gpsOn'):t('gpsPaused')}${fs.gpsErr&&html` <b>${fs.gpsErr}</b>`}</div>
   <div className="timer">${tm}</div>
-  <div className="tstat"><span><b>${fs.km.toFixed(2)}</b>${t('km')}</span><span><b>${fs.obs.length}</b>${t('obs')}</span><span><b>${fs.incs.length}</b>${t('inc')}</span><span><b>${fs.photos.length}</b>${t('photo')}</span></div>
-  <div className="bgrid"><button className="big" onClick=${fs.togglePause}><${Icon} n=${fs.st==='active'?'pause':'play'} s=${24}/>${fs.st==='active'?t('pause'):t('resume')}</button><button className="big" onClick=${()=>fs.setScr('obs')}><${Icon} n="eye" s=${24}/>${t('obs')}</button><button className="big warn" onClick=${()=>fs.setScr('inc')}><${Icon} n="incident" s=${24}/>${t('inc')}</button><${PhotoPick} fs=${fs} t=${t}/></div>
+  <div className="tstat"><span><b>${fs.km.toFixed(2)}</b>${t('km')}</span><span><b>${fs.enc.length}</b>${t('checks')}</span><span><b>${fs.enc.filter(e=>e.code).length}</b>${t('infrN')}</span><span><b>${fs.seiz.length}</b>${t('seizN')}</span></div>
+  <button className="big go" onClick=${()=>{setCk(blankCk());fs.setScr('chk');}}><${Icon} n="staff" s=${24}/>${t('chk')}</button>
+  <div className="bgrid"><button className="big" onClick=${fs.togglePause}><${Icon} n=${fs.st==='active'?'pause':'play'} s=${24}/>${fs.st==='active'?t('pause'):t('resume')}</button><button className="big" onClick=${()=>fs.setScr('obs')}><${Icon} n="eye" s=${24}/>${t('obs')} (${fs.obs.length})</button><button className="big warn" onClick=${()=>fs.setScr('inc')}><${Icon} n="incident" s=${24}/>${t('inc')} (${fs.incs.length})</button><${PhotoPick} fs=${fs} t=${t}/></div>
   <button className="big stop" onClick=${fs.complete}><${Icon} n="stop" s=${22}/>${t('complete')}</button></div>`;}
+ else if(fs.scr==='chk'){nav=false;const u=(k,v)=>setCk(o=>({...o,[k]:v}));const setIt=(i,k,v)=>setCk(o=>({...o,items:o.items.map((x,j)=>j===i?{...x,[k]:v}:x)}));
+  const toggleSeized=v=>setCk(o=>({...o,seized:v,items:v&&!o.items[0].name?[{name:(o.gear!=='None'?o.gear+' '+o.gearId:'').trim(),unit:'Piece',qty:o.qty||'1',value:''},...o.items.slice(1)]:o.items}));
+  body=html`<div className="fa-form"><h2>${t('chk')}</h2><p className="muted small">Form 1A · ${cur&&cur.id} · No. ${fs.enc.length+1}</p>
+  <div className="two"><div><label htmlFor="ck-time">${t('time')}</label><input id="ck-time" type="time" value=${ck.time} onChange=${e=>u('time',e.target.value)}/></div><div><label htmlFor="ck-or">${t('origin')}</label><${Sel} id="ck-or" value=${ck.origin} onChange=${v=>u('origin',v)} opts=${[...BMUS.map(b=>b.name.replace(' BMU','')),'Other']}/></div></div>
+  <label htmlFor="ck-n">${t('fname')}</label><input id="ck-n" autoComplete="off" value=${ck.name} onChange=${e=>u('name',e.target.value)}/>
+  <div className="two"><div><label htmlFor="ck-id">${t('idno')}</label><input id="ck-id" inputMode="numeric" autoComplete="off" value=${ck.id} onChange=${e=>u('id',e.target.value)}/></div><div><label htmlFor="ck-ph">${t('phone')}</label><input id="ck-ph" type="tel" inputMode="tel" autoComplete="off" value=${ck.phone} onChange=${e=>u('phone',e.target.value)}/></div></div>
+  <div className="two"><div><label htmlFor="ck-g">${t('gear')}</label><${Sel} id="ck-g" value=${ck.gear} onChange=${v=>u('gear',v)} opts=${GEARS}/></div><div><label htmlFor="ck-gi">${t('gearId')}</label><input id="ck-gi" value=${ck.gearId} onChange=${e=>u('gearId',e.target.value)}/></div></div>
+  <div className="two"><div><label htmlFor="ck-q">${t('gqty')}</label><input id="ck-q" type="number" inputMode="numeric" min="0" value=${ck.qty} onChange=${e=>u('qty',e.target.value)}/></div><div><label htmlFor="ck-gr">${t('ground')}</label><input id="ck-gr" value=${ck.ground} onChange=${e=>u('ground',e.target.value)}/></div></div>
+  <label htmlFor="ck-c">${t('infr')}</label><${Sel} id="ck-c" value=${String(ck.code)} onChange=${v=>u('code',v)} opts=${[['','None. Compliance check'],...INFR.map(i=>[String(i[0]),i[0]+'. '+i[1]])]}/>
+  <label htmlFor="ck-a">${t('action')}</label><${Sel} id="ck-a" value=${ck.action} onChange=${v=>setCk(o=>({...o,action:v,seized:v==='Gear confiscated'?true:o.seized,items:v==='Gear confiscated'&&!o.items[0].name?[{name:(o.gear!=='None'?o.gear+' '+o.gearId:'').trim(),unit:'Piece',qty:o.qty||'1',value:''},...o.items.slice(1)]:o.items}))} opts=${ACTIONS}/>
+  <label htmlFor="ck-d">${t('details')}</label><textarea id="ck-d" rows="3" value=${ck.details} onChange=${e=>u('details',e.target.value)}/>
+  <div className="rowx"><${Toggle} id="ck-s" on=${ck.seized} onChange=${toggleSeized} label=${t('seizedQ')}/><label htmlFor="ck-s">${t('seizedQ')} (Form DF/SZ)</label></div>
+  ${ck.seized&&html`<div className="seizebox"><p className="small muted">The Seizure Form is filled in for you from this check: officer, station, place and time.</p>${ck.items.map((it,i)=>html`<div key=${i} className="seize-r"><input aria-label=${t('itemName')+' '+(i+1)} placeholder=${t('itemName')} value=${it.name} onChange=${e=>setIt(i,'name',e.target.value)}/><${Sel} id=${'si-u'+i} value=${it.unit} onChange=${v=>setIt(i,'unit',v)} opts=${UNITS}/><input aria-label=${t('qty')} placeholder=${t('qty')} type="number" inputMode="numeric" value=${it.qty} onChange=${e=>setIt(i,'qty',e.target.value)}/><input aria-label=${t('value')} placeholder=${t('value')} type="number" inputMode="numeric" value=${it.value} onChange=${e=>setIt(i,'value',e.target.value)}/></div>`)}${ck.items.length<7&&html`<button className="btn" onClick=${()=>setCk(o=>({...o,items:[...o.items,{name:'',unit:'Piece',qty:'',value:''}]}))}>${t('addItem')}</button>`}</div>`}
+  <${PhotoPick} fs=${fs} t=${t}/><${Thumbs} fs=${fs}/>
+  <div className="bgrid"><button className="big" onClick=${()=>fs.setScr('patrol')}>${t('cancel')}</button><button className="big go" disabled=${!ck.name.trim()} onClick=${()=>{const it=ck.seized?ck.items.filter(i=>i.name.trim()).map(i=>({...i,qty:+i.qty||1,value:+i.value||0})):[];fs.addEnc({...ck},it,cur);setCk(blankCk());}}>${t('save')}</button></div></div>`;}
  else if(fs.scr==='obs'){nav=false;body=html`<div className="fa-form"><h2>${t('newObs')}</h2><label htmlFor="fo-t">${t('type')}</label><${Sel} id="fo-t" value=${of_.t} onChange=${v=>setOf_(o=>({...o,t:v}))} opts=${['Marine wildlife','Coral condition','Habitat','Boat activity','Other']}/><label htmlFor="fo-n">${t('notes')}</label><textarea id="fo-n" rows="4" value=${of_.n} onChange=${e=>setOf_(o=>({...o,n:e.target.value}))}/><${PhotoPick} fs=${fs} t=${t}/><${Thumbs} fs=${fs}/><p className="small muted">GPS: ${fs.pos?fs.pos.lat.toFixed(5)+', '+fs.pos.lon.toFixed(5):'waiting for position'}</p><div className="bgrid"><button className="big" onClick=${()=>fs.setScr('patrol')}>${t('cancel')}</button><button className="big go" onClick=${()=>{fs.addObs(of_);setOf_({t:'Marine wildlife',n:''});}}>${t('save')}</button></div></div>`;}
  else if(fs.scr==='inc'){nav=false;body=html`<div className="fa-form"><h2>${t('newInc')}</h2><label htmlFor="fi-c">${t('category')}</label><${Sel} id="fi-c" value=${inf.c} onChange=${v=>setInf(o=>({...o,c:v}))} opts=${INC_CATS}/><label htmlFor="fi-d">${t('desc')}</label><textarea id="fi-d" rows="4" value=${inf.d} onChange=${e=>setInf(o=>({...o,d:e.target.value}))}/><label htmlFor="fi-p">${t('persons')}</label><input id="fi-p" value=${inf.p} onChange=${e=>setInf(o=>({...o,p:e.target.value}))}/><${PhotoPick} fs=${fs} t=${t}/><${Thumbs} fs=${fs}/><div className="bgrid"><button className="big" onClick=${()=>fs.setScr('patrol')}>${t('cancel')}</button><button className="big warn" onClick=${()=>{fs.addInc(inf);setInf({c:INC_CATS[0],d:'',p:''});}}>${t('save')}</button></div></div>`;}
- else if(fs.scr==='done'){nav=false;body=html`<div className="fa-form"><h2>${t('summary')}</h2><div className="sumgrid"><span>${t('duration')}<b>${tm}</b></span><span>${t('distance')}<b>${fs.km.toFixed(2)} km</b></span><span>${t('obs')}<b>${fs.obs.length}</b></span><span>${t('inc')}<b>${fs.incs.length}</b></span><span>${t('photos')}<b>${fs.photos.length}</b></span><span>GPS points<b>${fs.track.length}</b></span></div><${Thumbs} fs=${fs}/><p className="small muted">${fs.offline?'You are offline. The patrol is saved on this phone and syncs later without creating duplicates.':'The Super Admin will review the submitted patrol.'}</p><div className="bgrid"><button className="big" onClick=${()=>{fs.setScr('patrol');fs.togglePause();}}>${t('back')}</button><button className="big go" onClick=${fs.submit}>${t('submit')}</button></div></div>`;}
+ else if(fs.scr==='done'){nav=false;
+  const pre=fs.pre||{objective:cur.objective,parts:cur.parts,vessel:cur.vessel,areas:cur.areas};
+  const attach={capture:true,seizure:fs.seiz.length>0,mcs:true,costing:!!po.attach.costing,other:!!po.attach.other};
+  const draft={...cur,end:hhmm(),objective:pre.objective,parts:pre.parts,vessel:pre.vessel,areas:(pre.areas||[]).filter(Boolean),enc:fs.enc,seiz:fs.seiz,chal:po.chal,attach,fuel:po.fuel,prep:{name:po.name,desig:po.desig,sign:po.sign,date:cur.date},mcsx:{}};
+  const ck2=k=>setPo(o=>({...o,chal:{...o.chal,[k]:!o.chal[k]}}));
+  const doc=pvT==='capture'?html`<${FormCapture} p=${draft} pii=${true}/>`:pvT==='report'?html`<${FormReport} p=${draft}/>`:pvT==='mcs'?html`<${FormMCS} p=${draft}/>`:(draft.seiz.length?html`<${FormSeizure} s=${draft.seiz[0]} p=${draft} pii=${true}/>`:html`<p className="muted small">No items were seized, so no Seizure Form is needed.</p>`);
+  body=html`<div className="fa-form"><h2>${t('summary')}</h2><div className="sumgrid"><span>${t('duration')}<b>${tm}</b></span><span>${t('distance')}<b>${fs.km.toFixed(2)} km</b></span><span>${t('checks')}<b>${fs.enc.length}</b></span><span>${t('infrN')}<b>${fs.enc.filter(e=>e.code).length}</b></span><span>${t('seizN')}<b>${fs.seiz.length}</b></span><span>${t('obs')} / ${t('inc')}<b>${fs.obs.length} / ${fs.incs.length}</b></span></div>
+  <h3 className="fa-h">${t('challenges')}</h3><div className="chks">${Object.keys(CHAL).map(k=>html`<label key=${k} className="chk"><input type="checkbox" checked=${!!po.chal[k]} onChange=${()=>ck2(k)}/><span>${CHAL[k][fs.lang==='sw'?1:0]}</span></label>`)}</div>
+  ${po.chal.other&&html`<input aria-label="Other challenge" placeholder=${CHAL.other[0]} value=${po.chal.otherText||''} onChange=${e=>setPo(o=>({...o,chal:{...o.chal,otherText:e.target.value}}))}/>`}
+  <label htmlFor="po-f">${t('fuel')}</label><input id="po-f" type="number" inputMode="decimal" min="0" value=${po.fuel} onChange=${e=>setPo(o=>({...o,fuel:e.target.value}))}/>
+  <h3 className="fa-h">${t('attached')}</h3><div className="chks">${ATTACH.map(a=>html`<label key=${a[0]} className="chk"><input type="checkbox" checked=${!!attach[a[0]]} disabled=${a[0]==='capture'||a[0]==='seizure'||a[0]==='mcs'} onChange=${()=>setPo(o=>({...o,attach:{...o.attach,[a[0]]:!o.attach[a[0]]}}))}/><span>${a[1]}${['capture','seizure','mcs'].includes(a[0])?' (made by POps)':''}</span></label>`)}</div>
+  <h3 className="fa-h">${t('prepared')}</h3>
+  <label htmlFor="po-n">Name</label><input id="po-n" value=${po.name} onChange=${e=>setPo(o=>({...o,name:e.target.value}))}/><label htmlFor="po-d">${t('designation')}</label><input id="po-d" value=${po.desig} onChange=${e=>setPo(o=>({...o,desig:e.target.value}))}/>
+  <${SigPad} value=${po.sign} onChange=${v=>setPo(o=>({...o,sign:v}))} label=${t('signHere')}/>
+  <h3 className="fa-h">${t('previewT')}</h3><${Seg} label="Form" value=${pvT} onChange=${setPvT} opts=${[['capture','1A'],['report','Report'],['seizure','Seizure'],['mcs','MCS']]}/><div className="pp-wrap sm">${doc}</div>
+  <${Thumbs} fs=${fs}/><p className="small muted">${fs.offline?'You are offline. The patrol and its forms are saved on this phone and sync later without creating duplicates.':'The Super Admin will review the submitted patrol and its forms.'}</p><div className="bgrid"><button className="big" onClick=${()=>{fs.setScr('patrol');fs.togglePause();}}>${t('back')}</button><button className="big go" onClick=${()=>fs.submit({chal:po.chal,attach,fuel:po.fuel,prep:draft.prep})}>${t('submit')}</button></div></div>`;}
+ else if(pv){const p=patrols.find(x=>x.id===pv);body=html`<div className="fa-pad"><button className="btn" onClick=${()=>setPv(null)}>${t('back')}</button><h2 className="hi">${p.id}</h2><${PatrolForms} key=${p.id} p=${p}/></div>`;}
  else if(fs.tab==='home'){body=html`<div className="fa-pad"><h2 className="hi">${t('hello')}, Hamisi</h2><p className="muted small">Marine Ranger · Pate BMU</p>
   ${fs.queue.length>0&&!fs.offline&&html`<div className="banner"><${Icon} n="sync" s=${18}/>${t('backOnline')} ${fs.queue.length} ${t('waiting')}<button className="btn small primary" onClick=${fs.sync}>${t('syncNow')}</button></div>`}
-  ${cur&&cur.status==='Planned'?html`<div className="acard"><div className="row"><strong>${cur.id}</strong><${Chip} t=${cur.status}/></div><p className="big-p">${cur.date}, ${cur.start}<br/>${cur.area}</p><p className="small muted">${cur.boat} · ${cur.cox}<br/>${t('crew')}: ${cur.rangers.join(', ')}</p><button className="big go" onClick=${fs.start}><${Icon} n="play" s=${22}/>${t('start')}</button></div>`:html`<div className="acard"><p className="muted">${t('noPatrol')}</p>${cur&&html`<div className="row"><strong>${cur.id}</strong><${Chip} t=${cur.status}/></div>`}</div>`}
-  <h3 className="fa-h">${t('recent')}</h3>${mine.filter(p=>p.id!==PID).slice(0,4).map(p=>html`<div key=${p.id} className="arow"><span><b>${p.id}</b><small>${p.date}</small></span><${Chip} t=${p.status}/></div>`)}</div>`;}
+  ${cur&&cur.status==='Planned'?html`<div className="acard"><div className="row"><strong>${cur.id}</strong><${Chip} t=${cur.status}/></div><p className="big-p">${cur.date}, ${cur.start}<br/>${cur.area}</p><p className="small muted">${cur.boat} · ${cur.cox}<br/>${t('crew')}: ${cur.rangers.join(', ')}</p><button className="big go" onClick=${openPre}><${Icon} n="play" s=${22}/>${t('start')}</button></div>`:html`<div className="acard"><p className="muted">${t('noPatrol')}</p>${cur&&html`<div className="row"><strong>${cur.id}</strong><${Chip} t=${cur.status}/></div>`}</div>`}
+  <h3 className="fa-h">${t('recent')}</h3>${mine.filter(p=>p.id!==PID).slice(0,4).map(p=>html`<button key=${p.id} className="arow tap" onClick=${()=>setPv(p.id)}><span><b>${p.id}</b><small>${p.date}${(p.enc||[]).length?' · '+p.enc.length+' '+t('checks').toLowerCase():''}</small></span><${Chip} t=${p.status}/></button>`)}</div>`;}
  else if(fs.tab==='map'){body=html`<div className="fa-maptab"><div className="fa-mapfull"><${GeoMap} key="fm" layers=${mapData.allowed.filter(l=>['zones','wildlife','habitat','patrols'].includes(l))} items=${mapData.items} tracks=${mapData.tracks} myPos=${fs.pos} myTrack=${fs.track} showLive=${false} height="100%" onSel=${()=>{}}/></div><div className="fa-mapbar"><button className="btn" onClick=${fs.locate}><${Icon} n="target" s=${16}/>${t('locate')}</button><${OfflineMapBtn} base="sat"/></div></div>`;}
- else if(fs.tab==='records'){body=html`<div className="fa-pad"><h2 className="hi">${t('myRecords')}</h2><h3 className="fa-h">Patrols</h3>${mine.map(p=>html`<div key=${p.id} className="arow"><span><b>${p.id}</b><small>${p.date} · ${p.km?p.km.toFixed(1)+' km':'—'}</small></span><${Chip} t=${p.status}/></div>`)}<h3 className="fa-h">Incidents</h3>${mineInc.length?mineInc.map(i=>html`<div key=${i.id} className="arow"><span><b>${i.id}</b><small>${i.cat}</small></span><${Chip} t=${STAGES[i.stage]} tone=${i.stage===0?'warn':'info'}/></div>`):html`<p className="muted small">None yet.</p>`}</div>`;}
+ else if(fs.tab==='records'){body=html`<div className="fa-pad"><h2 className="hi">${t('myRecords')}</h2><p className="muted small">${t('viewForms')}: tap a patrol.</p><h3 className="fa-h">Patrols</h3>${mine.map(p=>html`<button key=${p.id} className="arow tap" onClick=${()=>setPv(p.id)}><span><b>${p.id}</b><small>${p.date} · ${p.km?p.km.toFixed(1)+' km':'—'}${(p.enc||[]).length?' · '+p.enc.length+' '+t('checks').toLowerCase():''}</small></span><${Chip} t=${p.status}/></button>`)}<h3 className="fa-h">Incidents</h3>${mineInc.length?mineInc.map(i=>html`<div key=${i.id} className="arow"><span><b>${i.id}</b><small>${i.cat}</small></span><${Chip} t=${STAGES[i.stage]} tone=${i.stage===0?'warn':'info'}/></div>`):html`<p className="muted small">None yet.</p>`}</div>`;}
  else{body=html`<div className="fa-pad"><div className="me big-me"><span className="av">HM</span><div><strong>Hamisi Mwinyi</strong><small>Marine Ranger · Pate BMU</small></div></div>
-  <h3 className="fa-h">${t('language')}</h3><${Seg} label="Language" value=${fs.lang} onChange=${fs.setLang} opts=${[['en','English'],['sw','Kiswahili']]}/>${fs.lang==='sw'&&html`<p className="small muted">Draft Swahili text. To be reviewed with the rangers.</p>`}
+  <h3 className="fa-h">${t('language')}</h3><${Seg} label="Language" value=${fs.lang} onChange=${fs.setLang} opts=${[['en','English'],['sw','Kiswahili']]}/>${fs.lang==='sw'&&html`<p className="small muted">Form labels use the wording printed on the BMU Patrol Reporting Form. Other Kiswahili text is a draft to review with the rangers.</p>`}
   <h3 className="fa-h">${t('gpsSource')}</h3><${Seg} label="GPS source" value=${fs.gps} onChange=${fs.setGps} opts=${[['sim',t('simulated')],['device',t('device')]]}/><p className="small muted">${fs.gps==='device'?"Uses this phone's GPS during a started patrol. If you are far from Pate, the map follows you wherever you are.":'A simulated boat route inside the Iweni LMMA, so the demo works anywhere.'}</p>
   <h3 className="fa-h">Connection</h3><div className="rowx"><${Toggle} id="offt" on=${fs.offline} onChange=${fs.setOffline} label="Simulate no signal"/><label htmlFor="offt">Simulate no signal (demo)</label></div>
   ${pwa&&(pwa.canInstall?html`<button className="big go" onClick=${pwa.install}><${Icon} n="download" s=${22}/>${t('install')}</button>`:pwa.standalone?html`<p className="small muted">Installed on this device.</p>`:pwa.ios?html`<p className="small muted">To install on iPhone: tap Share, then Add to Home Screen.</p>`:null)}
@@ -1157,7 +1402,7 @@ const FieldApp=({embedded})=>{
  return html`<div className=${'fa '+(embedded?'emb':'full')}>
   <header className="fa-top"><span className="fa-brand"><${Logo} s=${26}/>POps Field</span><span className="fa-st"><button className=${'netpill '+(fs.offline?'off':'')} onClick=${()=>fs.setOffline(!fs.offline)} aria-label=${fs.offline?'Offline. Tap to go online (demo)':'Online. Tap to go offline (demo)'}><${Icon} n=${fs.offline?'wifioff':'wifi'} s=${14}/>${fs.offline?t('offline'):t('online')}</button><span className=${'syncpill '+(pend?'pend':'ok')}>${pend?(fs.queue.length||1)+' '+t('pending'):t('synced')}</span></span></header>
   <div className="fa-body">${body}</div>
-  ${nav&&html`<nav className="fa-nav" aria-label="Field navigation">${[['home','dashboard',t('home')],['map','map',t('map')],['records','reports',t('records')],['me','staff',t('me')]].map(n=>html`<button key=${n[0]} className=${fs.tab===n[0]?'on':''} aria-current=${fs.tab===n[0]?'page':null} onClick=${()=>fs.setTab(n[0])}><${Icon} n=${n[1]} s=${22}/><span>${n[2]}</span></button>`)}</nav>`}
+  ${nav&&html`<nav className="fa-nav" aria-label="Field navigation">${[['home','dashboard',t('home')],['map','map',t('map')],['records','reports',t('records')],['me','staff',t('me')]].map(n=>html`<button key=${n[0]} className=${fs.tab===n[0]&&!pv?'on':''} aria-current=${fs.tab===n[0]?'page':null} onClick=${()=>{setPv(null);fs.setTab(n[0]);}}><${Icon} n=${n[1]} s=${22}/><span>${n[2]}</span></button>`)}</nav>`}
  </div>`;
 };
 const FieldShell=()=>html`<div className="fieldshell"><${FieldApp}/></div>`;
@@ -1166,7 +1411,7 @@ const FieldShell=()=>html`<div className="fieldshell"><${FieldApp}/></div>`;
 const RangerHome=()=>html`<div><${PageHead} title="Ranger field app" sub="The same POps platform on a ranger's Android phone. Open it full-screen on a real phone with the link below.">${html`<a className="btn" href="#field" onClick=${()=>{}}><${Icon} n="phone" s=${16}/>Open full-screen (phone view)</a>`}</${PageHead}>
  <div className="rangerwrap"><div className="phone"><div className="notch"/><div className="screen"><${FieldApp} embedded=${true}/></div></div>
  <div className="ranger-side">
-  <${Card} title="Try it end to end"><ol className="howto"><li>Tap <b>Start patrol</b>. The map follows the boat and records the GPS track.</li><li>Add an <b>Observation</b>, an <b>Incident</b> and a <b>Photo</b>. Use a real camera on a phone.</li><li>Open <b>Me</b> and switch on <b>Simulate no signal</b>, then <b>Complete patrol</b> and <b>Submit</b>. It waits on the phone.</li><li>Go back online and tap <b>Sync now</b>.</li><li>Use <i>View as Super Admin</i> to review the patrol, its GPS track on the map, and the incident.</li></ol></${Card}>
+  <${Card} title="Try it end to end"><ol className="howto"><li>Tap <b>Start patrol</b>, confirm the crew and vessel, then go. The map follows the boat and records the GPS track.</li><li>Tap <b>Fisher check</b> and fill in one Form 1A row. Choose an infringement code and switch on <b>Items seized</b> to make the Seizure Form too.</li><li>Open <b>Me</b> and switch on <b>Simulate no signal</b>, then <b>Complete patrol</b> and <b>Submit</b>. It waits on the phone.</li><li>On the last screen, see Form 1A, the Patrol Report, the Seizure Form and the MCS sheet already filled in. Go back online and tap <b>Sync now</b>.</li><li>Use <i>View as Super Admin</i> to review the patrol, its GPS track on the map, and the incident.</li></ol></${Card}>
   <${Card} title="Built for the field"><ul className="ticks"><li>Large buttons and one task per screen</li><li>English and Kiswahili</li><li>GPS runs only during a started patrol, and the crew is told</li><li>Works offline. Saved map area, forms and photos wait for signal</li><li>Duplicate prevention on sync</li><li>Offline data cleared on sign-out or account switch</li><li>No access to finance, personnel or administration</li></ul></${Card}>
  </div></div></div>`;
 /* ============ app shell ============ */
@@ -1193,7 +1438,7 @@ const App=()=>{
  const [role,setRoleS]=useState('admin');const [bmuId,setBmuId]=useState('pate');
  const [h,setH]=useState(location.hash);
  const mod=(()=>{const x=h.replace('#','');return MODS.some(m=>m.id===x)?x:(x===''||x==='field'?(role==='admin'?'overview':'dashboard'):'dashboard');})();
- const [settings,setSettings]=useState({bmuDl:true,fishDl:false});
+ const [settings,setSettings]=useState({bmuDl:true,fishDl:false,piiBmu:false});
  const [assign,setAssign]=useState(ASSIGN0);
  const [patrols,setPatrols]=useState(PATROLS0);const [incidents,setIncidents]=useState(INC0);
  const [fin,setFin]=useState(FIN0);const [tour,setTour]=useState(TOUR0);

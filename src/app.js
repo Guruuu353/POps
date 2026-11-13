@@ -22,7 +22,7 @@ const App=()=>{
  const [role,setRoleS]=useState('admin');const [bmuId,setBmuId]=useState('pate');
  const [h,setH]=useState(location.hash);
  const mod=(()=>{const x=h.replace('#','');return MODS.some(m=>m.id===x)?x:(x===''||x==='field'?(role==='admin'?'overview':'dashboard'):'dashboard');})();
- const [settings,setSettings]=useState({bmuDl:true,fishDl:false});
+ const [settings,setSettings]=useState({bmuDl:true,fishDl:false,piiBmu:false});
  const [assign,setAssign]=useState(ASSIGN0);
  const [patrols,setPatrols]=useState(PATROLS0);const [incidents,setIncidents]=useState(INC0);
  const [fin,setFin]=useState(FIN0);const [tour,setTour]=useState(TOUR0);
