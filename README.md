@@ -16,4 +16,6 @@ Static files only. No server code, no build step.
 - Forms: Form 1A, the BMU Patrol Report, the Seizure Form (DF/SZ) and the MCS sheet are generated from each patrol. Open a patrol > Forms, then "Print or save as PDF", or export Form 1A as CSV from Reports. Sample names, IDs and phone numbers are invented.
 - GPS needs HTTPS and the phone's permission. The camera uses the phone's own camera app.
 - Zone shapes and the core area are illustrative until Patte confirms the real boundaries. Iweni boundary points come from the supplied coordinate table.
+- `docs/BACKEND-HANDOFF.md` explains what carries over to the real backend.
+- Vessel log, engine hours and service alerts are under Boats & Equipment (Coxswain view).
 - `app.js` is the combined source. The readable source files are in the `src` folder of the full project.

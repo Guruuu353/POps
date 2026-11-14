@@ -136,14 +136,17 @@ const DashFinance=()=>{
 };
 
 const DashCox=()=>{
- const {go,toast,log}=useApp();
+ const {go,toast,log,fleet}=useApp();
+ const myB=BOATS.filter(b=>b.cox===ROLES.cox.user);const al=svcAlerts(fleet,myB.map(b=>b.name));
  const items=['Life jackets for all crew','Fire extinguisher charged','VHF radio tested','First aid kit present','Engine oil and fuel level checked','Bilge dry'];
  const [ck,setCk]=useState(items.map((_,i)=>i<3));
  return html`<div><${PageHead} title="Boat operations" sub="Assigned boat and patrol support"/>
- <div className="kpis"><${Kpi} label="Assigned boat" value="MV Mlinzi" note="KMA-LAM-241"/><${Kpi} label="Next patrol" value="12 Nov, 06:00" note="PT-2026-0421"/><${Kpi} label="Fuel today" value="84 L used" note="of 120 L issued"/><${Kpi} label="Open defects" value="0" note="on your boat" tone="good"/></div>
+ <div className="kpis"><${Kpi} label="Assigned boats" value=${String(myB.length)} note=${myB.map(b=>b.name).join(', ')}/><${Kpi} label="Next patrol" value="12 Nov, 06:00" note="PT-2026-0421"/><${Kpi} label="Engine service" value=${al.length?al.length+' alert'+(al.length>1?'s':''):'All clear'} note=${al.length?al[0].boat+(al.some(a=>a.s==='over')?' overdue':' due soon'):'no service due'} tone=${al.some(a=>a.s==='over')?'crit':al.length?'warn':'good'}/><${Kpi} label="Open defects" value="0" note="on your boat" tone="good"/></div>
+ ${al.length>0&&html`<${Notice} tone=${al.some(a=>a.s==='over')?'crit':'warn'} title="Engine service alert">${al.map(a=>a.text).join('. ')}. <button className="link" onClick=${()=>go('boats')}>Open engines and service</button></${Notice}>`}
+ <${Card} title="Engine hours and service" sub="Run hours since the last service, from the vessel log"><div className="engmini">${myB.flatMap(b=>fleet[b.name].engines.map(e=>{const s=engSt(e),c=SVC_CHIP[s.s];return html`<div key=${b.name+e.id} className="engrow"><span><b>${b.name}</b> ${e.label}</span><span className="muted small">${s.since.toFixed(1)} of ${e.intervalH} h · ${e.hrs.toFixed(1)} h total</span><div className=${'eng-bar '+c[1]}><i style=${{width:s.pct+'%'}}/></div><${Chip} t=${c[0]} tone=${c[1]}/></div>`;}))}</div></${Card}>
  <div className="grid2"><${Card} title="Pre-trip safety check" sub="MV Mlinzi"><ul className="checks">${items.map((t,i)=>html`<li key=${t}><label><input type="checkbox" checked=${ck[i]} onChange=${()=>setCk(c=>c.map((v,k)=>k===i?!v:v))}/> ${t}</label></li>`)}</ul>
   <${Btn} kind="primary" disabled=${!ck.every(Boolean)} onClick=${()=>{toast('Safety check saved for MV Mlinzi');log('Recorded boat safety check','Boats & Equipment','MV Mlinzi');}}>Save safety check</${Btn}>${!ck.every(Boolean)&&html`<p className="muted small">Tick every item to save.</p>`}</${Card}>
- <${Card} title="Trips and fuel" right=${html`<${Btn} kind="ghost small" onClick=${()=>go('boats')}>Record a trip</${Btn}>`}><p className="muted">Record departure and return times, destination, crew, fuel issued and used, and report engine defects. You cannot see finance, enforcement or personnel records.</p></${Card}></div></div>`;
+ <${Card} title="Trips and fuel" right=${html`<${Btn} kind="ghost small" onClick=${()=>go('boats')}>Record a trip</${Btn}>`}><p className="muted">Add a vessel log entry with times, places, engine hour meters and refuel, and report engine defects. You cannot see finance, enforcement or personnel records.</p></${Card}></div></div>`;
 };
 
 const Dashboard=()=>{const {role}=useApp();

@@ -28,6 +28,7 @@ const App=()=>{
  const [fin,setFin]=useState(FIN0);const [tour,setTour]=useState(TOUR0);
  const [audit,setAudit]=useState(AUDIT0);const [vl,setVl]=useState([2,4,11]);
  const [projOpen,setProjOpen]=useState(null);
+ const [fleet,setFleet]=useState(FLEET0);const [vlog,setVlog]=useState(VLOG0);
  const [toasts,setToasts]=useState([]);const [nav,setNav]=useState(false);const [notif,setNotif]=useState(false);const [tip,setTip]=useState(true);
  const [installEv,setInstallEv]=useState(!!window.__pwaPrompt);
  const vw=useWidth();
@@ -44,7 +45,9 @@ const App=()=>{
  useEffect(()=>{if(window.POPS_PWA&&'serviceWorker' in navigator&&/^https?:/.test(location.protocol)){navigator.serviceWorker.register('sw.js').catch(()=>{});}},[]);
  const standalone=!!(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||!!navigator.standalone;
  const pwa=window.POPS_PWA?{canInstall:installEv&&!standalone,standalone,ios:/iphone|ipad|ipod/i.test(navigator.userAgent),install:async()=>{const e=window.__pwaPrompt;if(!e)return;e.prompt();try{await e.userChoice;}catch(x){}window.__pwaPrompt=null;setInstallEv(false);}}:null;
- const ctx={role,setRole,bmuId,user,go,can,log,toast,settings,setSettings,assign,setAssign,patrols,setPatrols,incidents,setIncidents,fin,setFin,tour,setTour,audit,vl,setVl,projOpen,setProjOpen,fs,pwa,signOut};
+ const ctx={role,setRole,bmuId,user,go,can,log,toast,settings,setSettings,assign,setAssign,patrols,setPatrols,incidents,setIncidents,fin,setFin,tour,setTour,audit,vl,setVl,projOpen,setProjOpen,fs,pwa,signOut,fleet,setFleet,vlog,setVlog};
+ const myBoats=BOATS.filter(b=>b.cox===ROLES.cox.user).map(b=>b.name);
+ const notes=[...(NOTES[role]||[]),...(role==='admin'||role==='cox'?svcAlerts(fleet,role==='cox'?myBoats:null).map(a=>'Service alert: '+a.text):[])];
  const dark=()=>{const a=document.documentElement.getAttribute('data-theme');return a==='dark'||(a!=='light'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);};
  const [,force]=useState(0);
  const theme=()=>{document.documentElement.setAttribute('data-theme',dark()?'light':'dark');force(n=>n+1);};
@@ -64,7 +67,7 @@ const App=()=>{
    <div className="viewas"><label htmlFor="viewas">Demo: view as</label><select id="viewas" value=${role} onChange=${e=>setRole(e.target.value)}>${Object.keys(ROLES).map(k=>html`<option key=${k} value=${k}>${ROLES[k].label}</option>`)}</select>
    ${role==='bmu'&&html`<select aria-label="BMU" value=${bmuId} onChange=${e=>setBmuId(e.target.value)}>${BMUS.map(b=>html`<option key=${b.id} value=${b.id}>${b.name}</option>`)}</select>`}</div>
    <div className="topr">${pwa&&pwa.canInstall&&html`<button className="btn small primary" onClick=${pwa.install}><${Icon} n="download" s=${15}/>Install app</button>`}<span className="chip info demo"><i/>Demo · sample data</span>
-   <div className="notifwrap"><button className="iconbtn" aria-label="Notifications" aria-expanded=${notif} onClick=${()=>setNotif(o=>!o)}><${Icon} n="bell"/><b className="dotn">${(NOTES[role]||[]).length}</b></button>${notif&&html`<div className="pop" role="menu"><h4>Notifications</h4><ul>${(NOTES[role]||[]).map(n=>html`<li key=${n}>${n}</li>`)}</ul><small>Alerts follow your permissions.</small></div>`}</div>
+   <div className="notifwrap"><button className="iconbtn" aria-label="Notifications" aria-expanded=${notif} onClick=${()=>setNotif(o=>!o)}><${Icon} n="bell"/><b className="dotn">${notes.length}</b></button>${notif&&html`<div className="pop" role="menu"><h4>Notifications</h4><ul>${notes.map(n=>html`<li key=${n}>${n}</li>`)}</ul><small>Alerts follow your permissions.</small></div>`}</div>
    <button className="iconbtn" aria-label="Switch light or dark theme" onClick=${theme}><${Icon} n=${dark()?'sun':'moon'}/></button></div></header>
   ${tip&&mod!=='overview'&&html`<div className="tipbar"><span><strong>Exploring the demo.</strong> Use <em>View as</em> to switch role and watch the menus, data and buttons change. Everything you do is recorded in the Audit Trail.</span><button className="iconbtn" aria-label="Dismiss" onClick=${()=>setTip(false)}><${Icon} n="x" s=${16}/></button></div>`}
   <main id="content">${can(mod)?html`<${View} key=${role+bmuId+mod}/>`:html`<div key=${role+mod}><${PageHead} title=${m.label} sub=${m.fn}/><${Denied} mod=${m.label} role=${role}/></div>`}</main>

@@ -403,3 +403,14 @@ body:has(.fieldshell){padding:0}body:has(.fieldshell)::before{background:var(--s
 .arow.tap{width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;min-height:60px}
 .fa .big:disabled{opacity:.5}.fa .big.go{display:flex}
 .fa-patrol>.big{margin-inline:16px;width:auto}
+
+/* ---------- vessel log and engines ---------- */
+.sec-h{font:650 18px var(--font-d);margin:20px 0 10px}
+.eng-big{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}.eng-big>div{background:var(--neutral-soft);border-radius:12px;padding:10px 12px;display:grid;gap:2px}.eng-big b{font:700 26px var(--font-d);line-height:1.1}.eng-big span{font-size:12px;color:var(--ink-2)}
+.eng-bar{position:relative;height:12px;border-radius:99px;background:var(--neutral-soft);overflow:visible;margin:4px 0 10px;border:1px solid var(--line)}.eng-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--good)}.eng-bar.warn i{background:var(--warn)}.eng-bar.crit i{background:var(--crit,#C0392B)}
+.eng-bar u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink-2);text-decoration:none;opacity:.6}
+.engmini{display:grid;gap:10px}.engrow{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.2fr) minmax(80px,1fr) auto;gap:12px;align-items:center}.engrow .eng-bar{margin:0}
+.pp-vh{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:15px;margin-bottom:8px;border-bottom:2px solid var(--pl);padding-bottom:6px}.pp-vh b{font-weight:700}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+@media (max-width:700px){.eng-big{grid-template-columns:1fr 1fr 1fr}.eng-big b{font-size:20px}.engrow{grid-template-columns:1fr 1fr}.engrow .eng-bar{grid-column:1/-1}}
+.notice.crit{background:var(--crit-soft);border-color:var(--crit);color:var(--ink)}.notice.crit strong{color:var(--crit)}

@@ -6,6 +6,7 @@ const STEPS=[
  ['admin','patrols','Super Admin','Open the patrol and its Forms tab','Open PT-2026-0416. See the same four forms in the paper layout, with ID and phone numbers shown to this role only.'],
  ['admin','incidents','Super Admin','Refer an incident and keep the record','Move the incident from Submitted to Referred. POps records and tracks it. It does not give enforcement powers.'],
  ['admin','reports','Super Admin','Infringements by type and CSV export','See the summary the MCS outcome form asks for, across all patrols. In the installed app, export every Form 1A row to CSV.'],
+ ['cox','boats','Coxswain','Log a trip and watch the engine service counter','Add a log entry in the same layout as the paper Vessel Log. Both engine hour meters update, and run hours since the last service count up. Try Service settings to raise an alert.'],
  ['board','finance','Board Chairperson','Money follows the same rules','Entries are made by Finance and approved by the Board. The Super Admin cannot skip the approval.'],
  ['fisheries','reports','Fisheries Officer','Partners get read-only access','The Super Admin switches report downloads on or off. Fisher IDs and phones are masked unless the role is allowed to see them. Every download is logged.'],
  ['admin','audit','Super Admin','Every step is on record','The Audit Trail shows who did what, when, and to which record.']
@@ -22,7 +23,7 @@ const GAPS=[
  ['Convictions, fines and prosecution outcomes are never added back to the patrol.','The MCS follow-up columns are filled in later against the same patrol, and roll up into one summary.','admin','reports'],
  ['Anyone with the spreadsheet sees everything, including finance and visitor details.','Roles control every screen. Officers see only their assigned projects, and the database enforces it.','officer','projects'],
  ['Tourism cash and M-Pesa payments do not match what reaches the books.','Booking, payment, receipt and reconciliation sit in one chain. Finance reconciles each payment.','tourism','tourism'],
- ['Fuel, engine faults and boat trips are remembered, not recorded.','A trip log with fuel and a defect report that reaches the Super Admin.','cox','boats'],
+ ['Fuel, engine faults and boat trips are remembered, not recorded. On the Nguru log we received, every engine hours and refuel box was empty.','A digital vessel log in the same layout, with an hour meter per engine, run hours since the last service, and an alert before a service is due.','cox','boats'],
  ['Nobody can say who changed what.','An audit trail of who did what, when and to which record.','admin','audit']
 ];
 const QUESTIONS=[
@@ -31,6 +32,8 @@ const QUESTIONS=[
  ['"JCMA" name','Form 1A asks for it. Confirm the full name and the value to print for Pate and Shanga.'],
  ['Draft marking','The current template is marked "TOT\'s draft, July 2023, limited circulation". Confirm which version Patte and the Fisheries Department treat as final.'],
  ['Who receives which form','Confirm where Form 1A, the Patrol Report, Form DF/SZ and the MCS sheet are sent, and by when.'],
+ ['Vessel log: engine hours','The sheet has two columns both headed "Engine hours". Are they the meter reading at arrival, or hours run on that trip? POps stores meter readings and works out the run hours.'],
+ ['Service rules per engine','What is the service interval for each engine make, in hours and months? Who must be alerted, and how: in the app, SMS, WhatsApp or email?'],
  ['Printed and electronic signatures','Confirm whether a printed POps form with a drawn signature is accepted, or whether a signed paper copy must be kept.']
 ];
 const REALVS=[
@@ -43,6 +46,7 @@ const REALVS=[
  ['The four forms','Form 1A, Patrol Report, Seizure Form and MCS sheet in the paper layout. Print or save as PDF, and CSV export, in the installed app link.','Server-made PDF on the final layouts once Patte and Fisheries approve them.'],
  ['Signatures','Drawn on the phone screen.','Signing rules agreed with the Fisheries Department, with each signature on the audit trail.'],
  ['Reports','Downloads are logged. Summary of infringements by type.','Server-made PDF and Excel on Patte letterhead.'],
+ ['Service alerts','Shown in the bell menu and on the Coxswain page when an engine is near or past its service limit.','The same alerts by SMS, email or push, checked every night as well as when a log is saved.'],
  ['Notifications','An in-app list.','Push notifications to phones, and email.'],
  ['Public website','Sharing switches.','Approved items published to the website through a separate, checked feed.']
 ];
